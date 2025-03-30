@@ -326,6 +326,21 @@ const activities = {
   // Llamar a la inicialización
   initializeCalendar();
 
+  // Popup principal (día)
+  const popupHTML = `
+    <div id="popup" class="popup" onclick="closePopup()">
+      <div class="popup-content" onclick="event.stopPropagation()">
+        <h2 id="popupTitle"></h2>
+        <div id="popupDesc" class="activity-list"></div>
+        <div class="task-progress-bar">
+          <div id="taskProgressFill" class="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML("beforeend", popupHTML);
+
   // Popup secundario para actividades
   const activityPopupHTML = `
     <div id="activityPopup" class="activity-popup" onclick="closeActivityPopup()">
@@ -338,3 +353,29 @@ const activities = {
   `;
 
   document.body.insertAdjacentHTML("beforeend", activityPopupHTML);
+
+// Estilos para el popup
+const style = document.createElement("style");
+style.innerHTML = `
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.popup.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+`;
+document.head.appendChild(style);
