@@ -271,7 +271,14 @@ const activities = {
   }
   
   function closeActivityPopup() {
-    document.getElementById("activityPopup").classList.remove("active");
+    const popup = document.getElementById("activityPopup");
+    popup.classList.remove("active");
+  }
+  
+  // Cerrar popup del día
+  function closePopup() {
+    const popup = document.getElementById("popup");
+    popup.classList.remove("active");
   }
   
   // Actualizar barra de progreso de tareas
@@ -318,3 +325,16 @@ const activities = {
   
   // Llamar a la inicialización
   initializeCalendar();
+
+  // Popup secundario para actividades
+  const activityPopupHTML = `
+    <div id="activityPopup" class="activity-popup" onclick="closeActivityPopup()">
+      <div class="activity-popup-content" onclick="event.stopPropagation()">
+        <button class="close-btn" onclick="closeActivityPopup()">Cerrar</button>
+        <h2 id="activityPopupTitle"></h2>
+        <div id="activityPopupContent"></div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML("beforeend", activityPopupHTML);
