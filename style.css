@@ -102,6 +102,7 @@ h1 {
   cursor: pointer;
   color: #00aced;
   text-decoration: underline;
+  margin-left: 5px;
 }
 .instruction-toggle {
   cursor: pointer;
@@ -149,6 +150,21 @@ h1 {
   transition: width 0.3s ease-in-out;
 }
 
+/* Progress bar for tasks */
+.task-progress-bar {
+  width: 100%;
+  background-color: #34495e;
+  border-radius: 20px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+.task-progress-bar .progress-fill {
+  height: 15px;
+  width: 0%;
+  background: #2ecc71;
+  transition: width 0.3s ease-in-out;
+}
+
 /* Consejos */
 .advice {
   width: 90%;
@@ -161,4 +177,10 @@ h1 {
 .advice p {
   margin: 0.5rem 0;
   font-size: 0.9rem;
+}
+
+/* Task checkbox */
+.task-checkbox {
+  margin-right: 10px;
+  transform: scale(1.2);
 }

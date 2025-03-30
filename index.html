@@ -20,10 +20,9 @@
     <div class="popup-content" onclick="event.stopPropagation()">
       <h2 id="popupTitle"></h2>
       <div id="popupDesc" class="activity-list"></div>
-      <label>
-        <input type="checkbox" id="completionCheck" onchange="toggleDayCompletion()">
-        Marcar como completado
-      </label>
+      <div class="task-progress-bar">
+        <div id="taskProgressFill" class="progress-fill"></div>
+      </div>
     </div>
   </div>
   

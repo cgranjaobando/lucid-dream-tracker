@@ -219,22 +219,6 @@ const activities = {
     ["Diario", "Escenarios", "Instrucción"]
   ];
   
-  const calendar = document.getElementById("calendar");
-  const totalDays = plan.length;
-  let completed = 0;
-  let selectedDayBox = null;
-  
-  // Crear el calendario (cada día)
-  for (let i = 0; i < totalDays; i++) {
-    const dayBox = document.createElement("div");
-    dayBox.classList.add("day");
-    dayBox.dataset.day = i + 1;
-    dayBox.dataset.activities = JSON.stringify(plan[i]);
-    dayBox.innerHTML = `<strong>Día ${i + 1}</strong><br><small>${plan[i].join(", ")}</small>`;
-    dayBox.addEventListener("click", () => showPopup(dayBox));
-    calendar.appendChild(dayBox);
-  }
-  
   // Mostrar popup del día
   function showPopup(dayBox) {
     selectedDayBox = dayBox;
@@ -242,44 +226,26 @@ const activities = {
     const title = document.getElementById("popupTitle");
     const desc = document.getElementById("popupDesc");
     const activityKeys = JSON.parse(dayBox.dataset.activities);
-    
+  
     title.innerHTML = `Día ${dayBox.dataset.day}`;
-    // Para cada actividad: nombre (clic para descripción extendida), resumen y enlace "Ver más" para instrucciones prácticas
-    desc.innerHTML = activityKeys.map((key, index) => `
-      <div style="margin-bottom: 0.5rem;">
-        <strong class="activity-name" onclick="openActivityPopup('${key}')">${key}</strong><br>
-        <small>${activities[key]}</small><br>
-        <span class="instruction-toggle" onclick="toggleInstructionDetail('${key}', ${index}); event.stopPropagation();">Ver más</span>
-        <div id="instructionDetail_${key}_${index}" class="instruction-detail" style="display:none;"></div>
-      </div>
-    `).join("");
-    
-    // Actualizar checkbox de completado según el día
-    document.getElementById("completionCheck").checked = dayBox.classList.contains("completed");
+    desc.innerHTML = activityKeys
+      .map(
+        (key, index) => `
+        <div style="margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center;">
+            <input type="checkbox" class="task-checkbox" data-task="${key}" onchange="updateTaskProgress()">
+            <strong class="activity-name" onclick="openActivityPopup('${key}')">${key}</strong>
+          </div>
+          <small>${activities[key]}</small>
+          <span class="instruction-toggle" onclick="toggleInstructionDetail('${key}', ${index})">Ver más</span>
+          <div id="instructionDetail_${key}_${index}" class="instruction-detail" style="display: none;"></div>
+        </div>
+      `
+      )
+      .join("");
+  
+    updateTaskProgress(); // Inicializar barra de progreso de tareas
     popup.classList.add("active");
-  }
-  
-  function closePopup() {
-    document.getElementById("popup").classList.remove("active");
-  }
-  
-  // Alternar completado del día
-  function toggleDayCompletion() {
-    if (!selectedDayBox) return;
-    if (selectedDayBox.classList.contains("completed")) {
-      selectedDayBox.classList.remove("completed");
-      completed--;
-    } else {
-      selectedDayBox.classList.add("completed");
-      completed++;
-    }
-    updateProgress();
-  }
-  
-  // Actualizar la barra de progreso
-  function updateProgress() {
-    const percent = (completed / totalDays) * 100;
-    document.getElementById("progressFill").style.width = `${percent}%`;
   }
   
   // Alternar la visualización de las instrucciones prácticas en el popup del día
@@ -308,3 +274,47 @@ const activities = {
     document.getElementById("activityPopup").classList.remove("active");
   }
   
+  // Actualizar barra de progreso de tareas
+  function updateTaskProgress() {
+    const checkboxes = document.querySelectorAll(".task-checkbox");
+    const totalTasks = checkboxes.length;
+    const completedTasks = Array.from(checkboxes).filter((cb) => cb.checked).length;
+    const percent = (completedTasks / totalTasks) * 100;
+  
+    document.getElementById("taskProgressFill").style.width = `${percent}%`;
+  
+    // Marcar el día como completado si todas las tareas están hechas
+    if (completedTasks === totalTasks) {
+      selectedDayBox.classList.add("completed");
+    } else {
+      selectedDayBox.classList.remove("completed");
+    }
+  
+    updateProgress(); // Actualizar progreso general
+  }
+  
+  // Actualizar barra de progreso general
+  function updateProgress() {
+    const totalDays = plan.length;
+    const completedDays = document.querySelectorAll(".day.completed").length;
+    const percent = (completedDays / totalDays) * 100;
+  
+    document.getElementById("progressFill").style.width = `${percent}%`;
+  }
+  
+  // Inicializar el calendario
+  function initializeCalendar() {
+    const calendar = document.getElementById("calendar");
+    plan.forEach((activities, i) => {
+      const dayBox = document.createElement("div");
+      dayBox.classList.add("day");
+      dayBox.dataset.day = i + 1;
+      dayBox.dataset.activities = JSON.stringify(activities);
+      dayBox.innerHTML = `<strong>Día ${i + 1}</strong><br><small>${activities.join(", ")}</small>`;
+      dayBox.addEventListener("click", () => showPopup(dayBox));
+      calendar.appendChild(dayBox);
+    });
+  }
+  
+  // Llamar a la inicialización
+  initializeCalendar();
