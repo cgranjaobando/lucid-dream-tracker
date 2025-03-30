@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seguimiento de Sueños Lúcidos - 30 Días</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Seguimiento de Sueños Lúcidos - 30 Días</h1>
+  
+  <div class="progress-bar">
+    <div id="progressFill" class="progress-fill"></div>
+  </div>
+  
+  <div class="calendar" id="calendar"></div>
+  
+  <!-- Popup principal (día) -->
+  <div id="popup" class="popup" onclick="closePopup()">
+    <div class="popup-content" onclick="event.stopPropagation()">
+      <h2 id="popupTitle"></h2>
+      <div id="popupDesc" class="activity-list"></div>
+      <label>
+        <input type="checkbox" id="completionCheck" onchange="toggleDayCompletion()">
+        Marcar como completado
+      </label>
+    </div>
+  </div>
+  
+  <!-- Popup secundario (descripción extendida) -->
+  <div id="activityPopup" class="activity-popup" onclick="closeActivityPopup()">
+    <div class="activity-popup-content" onclick="event.stopPropagation()">
+      <button class="close-btn" onclick="closeActivityPopup()">Cerrar</button>
+      <h2 id="activityPopupTitle"></h2>
+      <div id="activityPopupContent"></div>
+    </div>
+  </div>
+  
+  <div class="advice">
+    <h2>Consejos Generales</h2>
+    <p>• Evita cafeína después de las 2 p.m.</p>
+    <p>• Evita pantallas al menos 30 minutos antes de dormir.</p>
+    <p>• Despiértate naturalmente siempre que sea posible.</p>
+    <p>• Completa tu diario incluso si te encuentras con “no recuerdo nada”.</p>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+/* Reset y configuración base */
+* { box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  background: linear-gradient(to right, #141e30, #243b55);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+/* Títulos */
+h1, h2 {
+  text-align: center;
+}
+h1 {
+  margin-bottom: 1rem;
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
+}
+
+/* Calendario */
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 900px;
+  padding: 0 10px;
+}
+.day {
+  background: #2c3e50;
+  padding: 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  text-align: center;
+}
+.day:hover {
+  transform: scale(1.03);
+  background-color: #3a4a5e;
+}
+.day.completed {
+  background-color: #27ae60;
+}
+
+/* Popups (principal y extendido) */
+.popup, .activity-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.popup.active, .activity-popup.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.popup-content, .activity-popup-content {
+  background-color: #1f2d3a;
+  padding: 1.5rem;
+  border-radius: 15px;
+  width: 90vw;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: fadeInUp 0.4s ease-out;
+  position: relative;
+}
+.popup-content h2, .activity-popup-content h2 {
+  margin-top: 0;
+  font-size: 1.3rem;
+}
+.popup-content label {
+  display: flex;
+  align-items: center;
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+.popup-content input[type="checkbox"] {
+  margin-right: 10px;
+  transform: scale(1.2);
+}
+
+/* Lista de actividades */
+.activity-list span {
+  display: block;
+  margin: 0.3rem 0;
+  cursor: pointer;
+}
+.activity-name {
+  cursor: pointer;
+  color: #00aced;
+  text-decoration: underline;
+}
+.instruction-toggle {
+  cursor: pointer;
+  color: #f39c12;
+  text-decoration: underline;
+}
+.instruction-detail {
+  margin-top: 5px;
+  font-size: 0.9rem;
+  color: #ddd;
+}
+
+/* Botón de cerrar popup extendido */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: #e74c3c;
+  border: none;
+  color: #fff;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+/* Animación */
+@keyframes fadeInUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Barra de progreso */
+.progress-bar {
+  width: 90%;
+  max-width: 900px;
+  background-color: #34495e;
+  border-radius: 20px;
+  margin: 20px auto;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 20px;
+  width: 0%;
+  background: #2ecc71;
+  transition: width 0.3s ease-in-out;
+}
+
+/* Consejos */
+.advice {
+  width: 90%;
+  max-width: 900px;
+  background: #2c3e50;
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 20px auto;
+}
+.advice p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
