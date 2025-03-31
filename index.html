@@ -68,6 +68,14 @@
       updateProgress(); // Update the overall progress bar
     }
 
+    function updateProgress() {
+      const totalDays = plan.length;
+      const completedDays = document.querySelectorAll(".day.completed").length;
+      const percent = (completedDays / totalDays) * 100;
+
+      document.getElementById("progressFill").style.width = `${percent}%`;
+    }
+
     function showPopup(dayBox) {
       selectedDayBox = dayBox;
       const popup = document.getElementById("popup");
@@ -102,6 +110,31 @@
 
       updateTaskProgress(); // Initialize the task progress bar
       popup.classList.add("active");
+    }
+
+    function initializeCalendar() {
+      const calendar = document.getElementById("calendar");
+      plan.forEach((activities, i) => {
+        const dayBox = document.createElement("div");
+        dayBox.classList.add("day");
+        dayBox.dataset.day = i + 1;
+        dayBox.dataset.activities = JSON.stringify(activities);
+
+        // Load saved state for the day
+        const savedStates = JSON.parse(localStorage.getItem(`day-${i + 1}-tasks`)) || [];
+        const isCompleted = savedStates.every((state) => state === true);
+
+        if (isCompleted) {
+          dayBox.classList.add("completed");
+        }
+
+        dayBox.innerHTML = `<strong>Día ${i + 1}</strong><br><small>${activities.join(", ")}</small>`;
+        dayBox.addEventListener("click", () => showPopup(dayBox));
+        calendar.appendChild(dayBox);
+      });
+
+      // Update the general progress bar
+      updateProgress();
     }
   </script>
 </body>
