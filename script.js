@@ -219,14 +219,52 @@ const activities = {
     ["Diario", "Escenarios", "Instrucción"]
   ];
   
-  // Mostrar popup del día
+  // Global variable to keep track of the currently selected day card
+  let selectedDayBox;
+
+  // Update the task progress bar in the popup and save the checkbox states
+  function updateTaskProgress() {
+    const checkboxes = document.querySelectorAll(".task-checkbox");
+    const totalTasks = checkboxes.length;
+    const completedTasks = Array.from(checkboxes).filter((cb) => cb.checked).length;
+    const percent = (completedTasks / totalTasks) * 100;
+    
+    document.getElementById("taskProgressFill").style.width = `${percent}%`;
+    
+    // Save the state only if a day popup is open
+    if (selectedDayBox) {
+        const day = selectedDayBox.dataset.day;
+        const checkboxStates = Array.from(checkboxes).map((cb) => cb.checked);
+        localStorage.setItem(`day-${day}-tasks`, JSON.stringify(checkboxStates));
+        
+        // Mark the day card as completed if all tasks are done
+        if (completedTasks === totalTasks) {
+            selectedDayBox.classList.add("completed");
+        } else {
+            selectedDayBox.classList.remove("completed");
+        }
+    }
+    
+    updateProgress(); // Update the overall progress bar
+  }
+
+  // Update the general progress bar based on how many day cards are completed
+  function updateProgress() {
+    const totalDays = plan.length;
+    const completedDays = document.querySelectorAll(".day.completed").length;
+    const percent = (completedDays / totalDays) * 100;
+    
+    document.getElementById("progressFill").style.width = `${percent}%`;
+  }
+
+  // Show the popup for a day card and restore the saved checkbox states
   function showPopup(dayBox) {
     selectedDayBox = dayBox;
     const popup = document.getElementById("popup");
     const title = document.getElementById("popupTitle");
     const desc = document.getElementById("popupDesc");
     const activityKeys = JSON.parse(dayBox.dataset.activities);
-  
+
     title.innerHTML = `Día ${dayBox.dataset.day}`;
     desc.innerHTML = activityKeys
       .map(
@@ -241,91 +279,79 @@ const activities = {
           <div id="instructionDetail_${key}_${index}" class="instruction-detail" style="display: none;"></div>
         </div>
       `
-      )
-      .join("");
-  
-    updateTaskProgress(); // Inicializar barra de progreso de tareas
+      ).join("");
+
+    // Load the saved checkbox state for this day
+    const day = dayBox.dataset.day;
+    const savedStates = JSON.parse(localStorage.getItem(`day-${day}-tasks`)) || [];
+    const checkboxes = document.querySelectorAll(".task-checkbox");
+    checkboxes.forEach((checkbox, index) => {
+        checkbox.checked = savedStates[index] || false;
+    });
+
+    updateTaskProgress(); // Refresh the task progress and update the day card status
     popup.classList.add("active");
   }
-  
-  // Alternar la visualización de las instrucciones prácticas en el popup del día
+
+  // Toggle the visibility of the practical instructions in the day popup
   function toggleInstructionDetail(key, index) {
     const detailDiv = document.getElementById(`instructionDetail_${key}_${index}`);
     if (detailDiv.style.display === "none") {
-      detailDiv.style.display = "block";
-      detailDiv.innerHTML = activityInstructions[key] || "<em>Instrucciones no disponibles.</em>";
+        detailDiv.style.display = "block";
+        detailDiv.innerHTML = activityInstructions[key] || "<em>Instrucciones no disponibles.</em>";
     } else {
-      detailDiv.style.display = "none";
+        detailDiv.style.display = "none";
     }
   }
-  
-  // Abrir popup secundario con la descripción extendida
+
+  // Open the secondary popup that shows the extended description for an activity
   function openActivityPopup(key) {
     const popup = document.getElementById("activityPopup");
     const popupTitle = document.getElementById("activityPopupTitle");
     const popupContent = document.getElementById("activityPopupContent");
-    
+
     popupTitle.innerHTML = key;
     popupContent.innerHTML = activityDetailsExtended[key] || "<em>Descripción no disponible.</em>";
     popup.classList.add("active");
   }
-  
+
+  // Make the close functions globally accessible so inline onclicks work
   window.closeActivityPopup = function () {
     const popup = document.getElementById("activityPopup");
     popup.classList.remove("active");
   };
-  
+
   window.closePopup = function () {
     const popup = document.getElementById("popup");
     popup.classList.remove("active");
   };
-  
-  // Actualizar barra de progreso de tareas
-  function updateTaskProgress() {
-    const checkboxes = document.querySelectorAll(".task-checkbox");
-    const totalTasks = checkboxes.length;
-    const completedTasks = Array.from(checkboxes).filter((cb) => cb.checked).length;
-    const percent = (completedTasks / totalTasks) * 100;
-  
-    document.getElementById("taskProgressFill").style.width = `${percent}%`;
-  
-    // Marcar el día como completado si todas las tareas están hechas
-    if (completedTasks === totalTasks) {
-      selectedDayBox.classList.add("completed");
-    } else {
-      selectedDayBox.classList.remove("completed");
-    }
-  
-    updateProgress(); // Actualizar progreso general
-  }
-  
-  // Actualizar barra de progreso general
-  function updateProgress() {
-    const totalDays = plan.length;
-    const completedDays = document.querySelectorAll(".day.completed").length;
-    const percent = (completedDays / totalDays) * 100;
-  
-    document.getElementById("progressFill").style.width = `${percent}%`;
-  }
-  
-  // Inicializar el calendario
+
+  // Initialize the calendar and restore the completion status for each day card
   function initializeCalendar() {
     const calendar = document.getElementById("calendar");
     plan.forEach((activities, i) => {
-      const dayBox = document.createElement("div");
-      dayBox.classList.add("day");
-      dayBox.dataset.day = i + 1;
-      dayBox.dataset.activities = JSON.stringify(activities);
-      dayBox.innerHTML = `<strong>Día ${i + 1}</strong><br><small>${activities.join(", ")}</small>`;
-      dayBox.addEventListener("click", () => showPopup(dayBox));
-      calendar.appendChild(dayBox);
+        const dayBox = document.createElement("div");
+        dayBox.classList.add("day");
+        dayBox.dataset.day = i + 1;
+        dayBox.dataset.activities = JSON.stringify(activities);
+
+        // Load saved state for the day to check if it's complete
+        const savedStates = JSON.parse(localStorage.getItem(`day-${i + 1}-tasks`)) || [];
+        const isCompleted = savedStates.length > 0 && savedStates.every((state) => state === true);
+        if (isCompleted) {
+            dayBox.classList.add("completed");
+        }
+        dayBox.innerHTML = `<strong>Día ${i + 1}</strong><br><small>${activities.join(", ")}</small>`;
+        dayBox.addEventListener("click", () => showPopup(dayBox));
+        calendar.appendChild(dayBox);
     });
+    updateProgress(); // Refresh the overall progress bar
   }
-  
-  // Llamar a la inicialización
+
+  // Call calendar initialization when the page loads
   initializeCalendar();
 
-  // Popup principal (día)
+  // Insert the popup and secondary popup HTML into the document body
   const popupHTML = `
     <div id="popup" class="popup" onclick="closePopup()">
       <div class="popup-content" onclick="event.stopPropagation()">
@@ -337,10 +363,8 @@ const activities = {
       </div>
     </div>
   `;
-
   document.body.insertAdjacentHTML("beforeend", popupHTML);
 
-  // Popup secundario para actividades
   const activityPopupHTML = `
     <div id="activityPopup" class="activity-popup" onclick="closeActivityPopup()">
       <div class="activity-popup-content" onclick="event.stopPropagation()">
@@ -350,7 +374,6 @@ const activities = {
       </div>
     </div>
   `;
-
   document.body.insertAdjacentHTML("beforeend", activityPopupHTML);
 
 // Estilos para el popup
