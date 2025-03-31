@@ -270,16 +270,15 @@ const activities = {
     popup.classList.add("active");
   }
   
-  function closeActivityPopup() {
+  window.closeActivityPopup = function () {
     const popup = document.getElementById("activityPopup");
     popup.classList.remove("active");
-  }
+  };
   
-  // Cerrar popup del día
-  function closePopup() {
+  window.closePopup = function () {
     const popup = document.getElementById("popup");
     popup.classList.remove("active");
-  }
+  };
   
   // Actualizar barra de progreso de tareas
   function updateTaskProgress() {
