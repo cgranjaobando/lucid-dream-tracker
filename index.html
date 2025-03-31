@@ -44,5 +44,65 @@
   </div>
   
   <script src="script.js"></script>
+  <script>
+    function updateTaskProgress() {
+      const checkboxes = document.querySelectorAll(".task-checkbox");
+      const totalTasks = checkboxes.length;
+      const completedTasks = Array.from(checkboxes).filter((cb) => cb.checked).length;
+      const percent = (completedTasks / totalTasks) * 100;
+
+      document.getElementById("taskProgressFill").style.width = `${percent}%`;
+
+      // Save the state of the checkboxes in localStorage
+      const day = selectedDayBox.dataset.day;
+      const checkboxStates = Array.from(checkboxes).map((cb) => cb.checked);
+      localStorage.setItem(`day-${day}-tasks`, JSON.stringify(checkboxStates));
+
+      // Mark the day as completed if all tasks are done
+      if (completedTasks === totalTasks) {
+        selectedDayBox.classList.add("completed");
+      } else {
+        selectedDayBox.classList.remove("completed");
+      }
+
+      updateProgress(); // Update the overall progress bar
+    }
+
+    function showPopup(dayBox) {
+      selectedDayBox = dayBox;
+      const popup = document.getElementById("popup");
+      const title = document.getElementById("popupTitle");
+      const desc = document.getElementById("popupDesc");
+      const activityKeys = JSON.parse(dayBox.dataset.activities);
+
+      title.innerHTML = `Día ${dayBox.dataset.day}`;
+      desc.innerHTML = activityKeys
+        .map(
+          (key, index) => `
+          <div style="margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center;">
+              <input type="checkbox" class="task-checkbox" data-task="${key}" onchange="updateTaskProgress()">
+              <strong class="activity-name" onclick="openActivityPopup('${key}')">${key}</strong>
+            </div>
+            <small>${activities[key]}</small>
+            <span class="instruction-toggle" onclick="toggleInstructionDetail('${key}', ${index})">Ver más</span>
+            <div id="instructionDetail_${key}_${index}" class="instruction-detail" style="display: none;"></div>
+          </div>
+        `
+        )
+        .join("");
+
+      // Load the saved state of the checkboxes from localStorage
+      const day = dayBox.dataset.day;
+      const savedStates = JSON.parse(localStorage.getItem(`day-${day}-tasks`)) || [];
+      const checkboxes = document.querySelectorAll(".task-checkbox");
+      checkboxes.forEach((checkbox, index) => {
+        checkbox.checked = savedStates[index] || false;
+      });
+
+      updateTaskProgress(); // Initialize the task progress bar
+      popup.classList.add("active");
+    }
+  </script>
 </body>
 </html>
