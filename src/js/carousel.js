@@ -11,6 +11,20 @@ let currentSlideIndex = 0;
 // Forward declarations of functions that need to be globally available
 let goToNextSlide, goToPrevSlide, goToSlide, updateCarouselDisplay;
 
+// Add this function near the top of the file, after the variable declarations
+function isClickWithinCardBounds(event, card) {
+  const rect = card.getBoundingClientRect();
+  const x = event.clientX || (event.touches && event.touches[0].clientX);
+  const y = event.clientY || (event.touches && event.touches[0].clientY);
+  
+  return (
+    x >= rect.left &&
+    x <= rect.right &&
+    y >= rect.top &&
+    y <= rect.bottom
+  );
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize carousel once plan data is available
   if (typeof plan === 'undefined') {
@@ -19,6 +33,36 @@ document.addEventListener('DOMContentLoaded', function() {
   } else {
     initializeCarousel();
   }
+});
+
+// Add this emergency fix helper at the document level
+document.addEventListener('DOMContentLoaded', function() {
+  // Add a function to force fix two-item lists
+  window.forceFixTwoItemLists = function() {
+    document.querySelectorAll('.activities-list').forEach(list => {
+      const items = list.querySelectorAll('span');
+      if (items.length <= 2) {
+        // Basic class and style
+        list.classList.add('two-items-or-less');
+        list.classList.remove('scrollable');
+        list.style.overflow = 'hidden';
+        list.style.overflowY = 'hidden';
+        
+        // Hide indicator
+        const indicator = list.closest('.activities-wrapper')?.querySelector('.activities-list-indicator');
+        if (indicator) {
+          indicator.style.display = 'none';
+          indicator.classList.remove('visible');
+        }
+      }
+    });
+  };
+  
+  // Run once immediately
+  setTimeout(window.forceFixTwoItemLists, 500);
+  
+  // Then periodically check and fix
+  setInterval(window.forceFixTwoItemLists, 2000);
 });
 
 // Initialize the carousel with three cards visible at once
@@ -105,13 +149,19 @@ function initializeCarousel() {
       
       // Asegurarse de eliminar la clase de transición activa
       document.body.classList.remove('carousel-transition-active');
+      
+      // Check if each activities list needs scrolling
+      document.querySelectorAll('.activities-list').forEach(list => {
+        const indicatorElement = list.closest('.activities-wrapper')?.querySelector('.activities-list-indicator');
+        checkIfScrollable(list, indicatorElement);
+      });
     };
     
     // Limpia las transiciones después de completar la animación
     setTimeout(clearAllTransitions, 350);
   };
   
-  // Create a single carousel card
+  // Create a single carousel card - modify the activities list handling with a direct style approach
   function createCarouselCard(dayIndex, className) {
     const carousel = document.querySelector('.carousel');
     const dayActivities = plan[dayIndex];
@@ -134,17 +184,114 @@ function initializeCarousel() {
       dayCard.classList.add('completed');
     }
     
+    // Updated HTML structure with activities-wrapper and a direct style attribute for 2 or fewer activities
+    const activityCount = dayActivities.length;
+    const needsScrolling = activityCount > 2;
+    
     dayCard.innerHTML = `
       <div class="card-content">
         <div class="card-image-area">
           <h3>Día ${dayIndex + 1}</h3>
           <!-- Placeholder for future image -->
         </div>
-        <div class="activities-list">
-          ${dayActivities.map(act => `<span>${act}</span>`).join('')}
+        <div class="activities-wrapper">
+          <div class="activities-list${!needsScrolling ? ' two-items-or-less' : ''}" 
+               data-scrollable="${needsScrolling}" 
+               style="${!needsScrolling ? 'overflow:hidden !important; overflow-y:hidden !important' : ''}"
+               ontouchstart="event.stopPropagation();">
+            ${dayActivities.map(act => `<span>${act}</span>`).join('')}
+          </div>
+          <div class="activities-list-indicator" ${!needsScrolling ? 'style="display:none!important;opacity:0!important"' : ''}></div>
         </div>
       </div>
     `;
+    
+    // Improved event handling
+    setTimeout(() => {
+      const activitiesList = dayCard.querySelector('.activities-list');
+      const indicatorElement = dayCard.querySelector('.activities-list-indicator');
+      
+      if (activitiesList && indicatorElement) {
+        // Get all activity items in this card
+        const activities = dayCard.querySelectorAll('.activities-list span');
+        
+        // If we have 2 or fewer items, force non-scrollable state with multiple approaches
+        if (activities.length <= 2) {
+          console.log(`Day ${dayIndex+1} has ${activities.length} activities - AGGRESSIVE non-scrollable enforcement`);
+          
+          // Class-based approach
+          activitiesList.classList.add('two-items-or-less');
+          activitiesList.classList.remove('scrollable');
+          
+          // Direct style approach
+          activitiesList.style.setProperty('overflow', 'hidden', 'important');
+          activitiesList.style.setProperty('overflow-y', 'hidden', 'important'); 
+          activitiesList.style.setProperty('scrollbar-width', 'none', 'important');
+          activitiesList.style.setProperty('-ms-overflow-style', 'none', 'important');
+          
+          // Handle the indicator
+          indicatorElement.classList.remove('visible');
+          indicatorElement.style.setProperty('display', 'none', 'important');
+          indicatorElement.style.setProperty('opacity', '0', 'important');
+          
+          // Fix again after a delay to catch any race conditions
+          setTimeout(() => {
+            activitiesList.classList.add('two-items-or-less');
+            activitiesList.style.setProperty('overflow', 'hidden', 'important');
+            indicatorElement.classList.remove('visible');
+            indicatorElement.style.setProperty('opacity', '0', 'important');
+          }, 300);
+        } else {
+          // Only check scrollability if we have more than 2 items
+          activitiesList.classList.remove('two-items-or-less');
+          checkIfScrollable(activitiesList, indicatorElement);
+        }
+        
+        // Force pointer-events to work by adding these handlers
+        activitiesList.addEventListener('mousedown', function(e) {
+          e.stopPropagation();
+        }, true);
+        
+        activitiesList.addEventListener('click', function(e) {
+          e.stopPropagation();
+        }, true);
+        
+        activitiesList.addEventListener('touchstart', function(e) {
+          // Don't stop propagation, but mark the event as handled
+          e._handledByList = true;
+        }, true);
+        
+        // Add scroll event listener to capture all scrolling events
+        activitiesList.addEventListener('scroll', function() {
+          clearTimeout(this._scrollTimeout);
+          this._scrollTimeout = setTimeout(() => {
+            updateScrollIndicator(this, indicatorElement);
+          }, 50); // Slightly longer timeout for smoother UI
+        });
+        
+        // Fix initial scrollbar visibility by forcing a reflow
+        setTimeout(() => {
+          checkIfScrollable(activitiesList, indicatorElement);
+        }, 250);
+      }
+    }, 200); // Slightly longer timeout to ensure content is fully rendered
+    
+    // Run another check after the card is fully rendered
+    setTimeout(() => {
+      const activitiesList = dayCard.querySelector('.activities-list');
+      const activities = dayCard.querySelectorAll('.activities-list span');
+      
+      if (activities.length <= 2 && activitiesList) {
+        activitiesList.classList.add('two-items-or-less');
+        activitiesList.style.setProperty('overflow', 'hidden', 'important');
+        
+        const indicator = dayCard.querySelector('.activities-list-indicator');
+        if (indicator) {
+          indicator.classList.remove('visible');
+          indicator.style.setProperty('display', 'none', 'important');
+        }
+      }
+    }, 500);
     
     carousel.appendChild(dayCard);
     return dayCard;
@@ -498,6 +645,11 @@ function initializeCarousel() {
     
     // Add desktop mouse drag functionality to the main carousel
     carousel.addEventListener('mousedown', (e) => {
+      const clickedCard = e.target.closest('.carousel-card');
+      if (!clickedCard || !isClickWithinCardBounds(e, clickedCard)) {
+        return; // Only proceed if click is inside a card's bounds
+      }
+      
       e.preventDefault();
       isDragging = true;
       carousel.style.cursor = 'grabbing';
@@ -597,6 +749,17 @@ function initializeCarousel() {
     
     // Touch swipe functionality with visual feedback
     carousel.addEventListener('touchstart', (e) => {
+      // Check if the touch is within an activities-list
+      if (e.target.closest('.activities-list')) {
+        // Let the native scrolling handle this
+        return;
+      }
+      
+      const touchedCard = e.target.closest('.carousel-card');
+      if (!touchedCard || !isClickWithinCardBounds(e, touchedCard)) {
+        return; // Only proceed if touch is inside a card's bounds
+      }
+      
       // Prevent default only on direct carousel touch to avoid scroll issues
       if (e.target === carousel) {
         e.preventDefault();
@@ -702,6 +865,124 @@ document.addEventListener('DOMContentLoaded', function() {
   `;
   document.head.appendChild(style);
 });
+
+// Simplify the check for two-items-or-less in checkIfScrollable
+function checkIfScrollable(element, indicatorElement) {
+  if (!element || !indicatorElement) return false;
+  
+  // Quick direct item count check first
+  const items = element.querySelectorAll('span');
+  const itemCount = items.length;
+  
+  // Special handling for 2 or fewer items
+  if (itemCount <= 2) {
+    // Simple direct approach
+    element.classList.add('two-items-or-less');
+    element.classList.remove('scrollable');
+    element.style.overflow = 'hidden';
+    element.style.overflowY = 'hidden';
+    indicatorElement.style.display = 'none';
+    indicatorElement.classList.remove('visible');
+    return false;
+  }
+  
+  // For more than 2 items, use the standard check
+  element.classList.remove('two-items-or-less');
+  element.style.overflow = 'auto';
+  
+  // Standard scrollability check
+  const isScrollable = Math.ceil(element.scrollHeight) > (element.clientHeight + 5);
+  
+  // Use more margin (5px) to avoid showing scrollbars for just minimal differences
+  const isScrollableWithMargin = Math.ceil(element.scrollHeight) > (element.clientHeight + 5);
+  
+  // Always remove existing classes first
+  element.classList.remove('scrollable');
+  indicatorElement.classList.remove('visible');
+  
+  // Add classes only if truly scrollable
+  if (isScrollableWithMargin) {
+    console.log("Container is scrollable, enabling scrollbar and indicator");
+    element.classList.add('scrollable');
+    
+    // Only check position if actually scrollable
+    updateScrollIndicator(element, indicatorElement);
+    
+    // Handle mousewheel events for desktop
+    if (!element._wheelEventSet) {
+      element._wheelEventSet = true; // Flag to prevent duplicate handlers
+      
+      // Remove any existing listeners first
+      element.removeEventListener('wheel', element._wheelHandler);
+      
+      // Create a new handler
+      element._wheelHandler = function(e) {
+        // Stop propagation to prevent card interactions
+        e.stopPropagation();
+        
+        // Allow default browser behavior for smoother scrolling
+        // But prevent parent elements from scrolling
+        const isAtTop = this.scrollTop <= 0;
+        const isAtBottom = Math.ceil(this.scrollTop + this.clientHeight) >= Math.floor(this.scrollHeight);
+        
+        if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom)) {
+          e.preventDefault(); // Prevent overscroll only at boundaries
+        }
+        
+        // Update indicator after a small delay to ensure accurate position
+        clearTimeout(this._indicatorTimeout);
+        this._indicatorTimeout = setTimeout(() => {
+          updateScrollIndicator(this, indicatorElement);
+        }, 20);
+      };
+      
+      // Add wheel handler
+      element.addEventListener('wheel', element._wheelHandler, { passive: false });
+      
+      // Also ensure scrolling shows the indicator
+      element.addEventListener('scroll', function() {
+        clearTimeout(this._indicatorTimeout);
+        this._indicatorTimeout = setTimeout(() => {
+          updateScrollIndicator(this, indicatorElement);
+        }, 20);
+      });
+    }
+  } else {
+    console.log("Container is NOT scrollable, hiding scrollbar and indicator");
+  }
+  
+  return isScrollableWithMargin;
+}
+
+// Updated function to control indicator visibility with stricter conditions
+function updateScrollIndicator(element, indicatorElement) {
+  if (!element || !indicatorElement) return;
+  
+  // More strict check for scrollability with larger threshold
+  const isScrollable = Math.ceil(element.scrollHeight) > (element.clientHeight + 5);
+  
+  if (isScrollable) {
+    element.classList.add('scrollable');
+    
+    // Only show indicator if not near bottom with a stricter threshold
+    const isNearBottom = (element.scrollHeight - Math.ceil(element.scrollTop) - element.clientHeight) < 8;
+    
+    if (isNearBottom) {
+      // At bottom - hide indicator
+      indicatorElement.classList.remove('visible');
+    } else if (element.scrollTop > 0) {
+      // Scrolled down but not at bottom - show indicator
+      indicatorElement.classList.add('visible');
+    } else {
+      // At top with more content below - show indicator
+      indicatorElement.classList.add('visible');
+    }
+  } else {
+    // Not enough content to scroll - hide everything
+    element.classList.remove('scrollable');
+    indicatorElement.classList.remove('visible');
+  }
+}
 
 // Make initialization function available globally
 window.initializeCarousel = initializeCarousel;

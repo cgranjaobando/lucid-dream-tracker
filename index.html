@@ -62,10 +62,77 @@
         </div>
     </div>
     <!-- Load scripts in the correct order -->
-    <script src="src/js/utils.js?v=1.0.1" defer></script>
-    <script src="src/js/script.js?v=1.0.1" defer></script>
-    <script src="src/js/carousel.js?v=1.0.1" defer></script>
-    <script src="src/views/grid.js?v=1.0.1" defer></script>
-    <script src="src/js/debug.js?v=1.0.1" defer></script>
+    <script src="src/js/utils.js?v=1.0.2" defer></script>
+    <script src="src/js/script.js?v=1.0.2" defer></script>
+    <script src="src/js/carousel.js?v=1.0.2" defer></script>
+    <script src="src/views/grid.js?v=1.0.2" defer></script>
+    <script src="src/js/debug.js?v=1.0.2" defer></script>
+
+    <!-- Add immediate fix for activities list with 2 or fewer items -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add a style rule with high specificity but very targeted selectors
+      const style = document.createElement('style');
+      style.textContent = `
+        /* Target only the activities list, not the entire card */
+        .carousel-card .activities-list.two-items-or-less,
+        .activities-list.two-items-or-less {
+          overflow: hidden !important;
+          overflow-y: hidden !important;
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+          max-height: none !important;
+        }
+        
+        /* Hide scrollbar in WebKit browsers */
+        .carousel-card .activities-list.two-items-or-less::-webkit-scrollbar,
+        .activities-list.two-items-or-less::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+        
+        /* Hide indicator when not needed */
+        .activities-list.two-items-or-less + .activities-list-indicator {
+          display: none !important;
+          opacity: 0 !important;
+          visibility: hidden !important;
+        }
+        
+        /* Ensure card visibility remains intact */
+        .carousel-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+        
+        /* Ensure current card is always visible */
+        .carousel-card.current-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          z-index: 10 !important;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // Schedule a simple fix that runs after everything is loaded
+      setTimeout(function fixTwoItemLists() {
+        document.querySelectorAll('.activities-list').forEach(list => {
+          const items = list.querySelectorAll('span');
+          if (items.length <= 2) {
+            list.classList.add('two-items-or-less');
+            list.style.overflow = 'hidden';
+            list.style.overflowY = 'hidden';
+            
+            const indicator = list.parentNode.querySelector('.activities-list-indicator');
+            if (indicator) {
+              indicator.style.display = 'none';
+            }
+          }
+        });
+      }, 500);
+    });
+    </script>
 </body>
 </html>

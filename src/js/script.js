@@ -122,49 +122,51 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize grid view (calendar)
     if (typeof window.initializeGridView === 'function') {
       window.initializeGridView();
+    }
+    
+    // Wait for DOM to be fully ready before initializing carousel
+    if (document.readyState === 'complete') {
+      tryInitCarousel();
     } else {
-      console.warn('Grid view initialization function not available yet');
+      window.addEventListener('load', tryInitCarousel);
     }
-    
-    // Improved carousel initialization with more robust error handling
-    function tryInitCarousel(attempts = 0) {
-      console.log(`Attempting carousel initialization, attempt ${attempts + 1}`);
-      
-      if (typeof window.initializeCarousel === 'function') {
-        try {
-          // Clear existing content first in case of partial initialization
-          const carousel = document.querySelector('.carousel');
-          if (carousel) carousel.innerHTML = '';
-          
-          window.initializeCarousel();
-          
-          // Verify initialization worked
-          setTimeout(() => {
-            const cards = document.querySelectorAll('.carousel-card');
-            if (cards.length === 0 && attempts < 5) {
-              console.warn('Carousel initialization did not create any cards, retrying...');
-              tryInitCarousel(attempts + 1);
-            } else if (cards.length > 0) {
-              console.log(`Carousel successfully initialized with ${cards.length} cards`);
-            }
-          }, 200);
-        } catch (error) {
-          console.error('Error during carousel initialization:', error);
-          if (attempts < 5) setTimeout(() => tryInitCarousel(attempts + 1), 300);
-        }
-      } else if (attempts < 5) {
-        console.warn('Carousel initialization function not available yet, retrying...');
-        setTimeout(() => tryInitCarousel(attempts + 1), 300);
-      } else {
-        console.error('Failed to initialize carousel after multiple attempts');
-      }
-    }
-    
-    tryInitCarousel();
     
     // Update overall progress
     if (typeof window.updateOverallProgress === 'function') {
       window.updateOverallProgress();
+    }
+  }
+
+  // Add the missing tryInitCarousel function
+  function tryInitCarousel(attempts = 0) {
+    console.log(`Attempting carousel initialization, attempt ${attempts + 1}`);
+    
+    if (typeof window.initializeCarousel === 'function') {
+      try {
+        window.initializeCarousel();
+        console.log('Carousel initialization successful');
+        
+        // Apply fix for two-item activity lists after carousel is initialized
+        if (typeof window.forceFixTwoItemLists === 'function') {
+          setTimeout(window.forceFixTwoItemLists, 300);
+        }
+      } catch (error) {
+        console.error('Error initializing carousel:', error);
+        
+        // Retry with a limit
+        if (attempts < 3) {
+          console.log(`Retrying carousel initialization in 300ms...`);
+          setTimeout(() => tryInitCarousel(attempts + 1), 300);
+        }
+      }
+    } else {
+      // If initialization function isn't available yet, wait and retry
+      if (attempts < 5) {
+        console.log(`initializeCarousel function not available yet, retrying in 300ms...`);
+        setTimeout(() => tryInitCarousel(attempts + 1), 300);
+      } else {
+        console.error('Failed to initialize carousel: function not available after multiple attempts');
+      }
     }
   }
   
@@ -222,8 +224,14 @@ window.addEventListener('DOMContentLoaded', function() {
   }, true); // Use capture phase
 });
 
-// Function to show the day popup when a day card is clicked (either in grid or carousel)
+// Function to show the day popup when a day card is clicked - ensure it uses the shared implementation
 window.showDayPopup = function(dayCard) {
+  // If the utils.js implementation exists, use that
+  if (typeof window.utils !== 'undefined' && typeof window.utils.showDayPopup === 'function') {
+    return window.utils.showDayPopup(dayCard);
+  }
+  
+  // Otherwise, use the implementation here
   // Store reference to selected card for later
   window.selectedDayCard = dayCard;
   

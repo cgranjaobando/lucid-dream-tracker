@@ -257,7 +257,13 @@
 
 /* Make all content inside the card non-interactive */
 .carousel-card .card-content * {
-  pointer-events: none;
+  pointer-events: none !important;
+}
+
+/* Exception for activities list to allow scrolling */
+.carousel-card .activities-list {
+  pointer-events: auto !important; /* Override the parent rule */
+  cursor: default !important; /* Use default cursor for scrollable content */
 }
 
 /* Current card needs higher z-index to be on top */
@@ -362,12 +368,22 @@
   user-select: none;
 }
 
-/* Activities list now at bottom of card */
-.activities-list {
+/* New wrapper to contain both list and fixed indicator */
+.activities-wrapper {
+  position: relative;
   margin-top: auto; /* Push to bottom */
   width: 100%;
-  max-height: 55%; /* Limit height to leave space for future image */
-  overflow-y: auto;
+  max-height: calc(var(--activity-item-height, 42px) * 2.3); /* Slightly taller to fit two items comfortably */
+  overflow: hidden; /* Important: hide overflow but allow inner scrolling */
+}
+
+/* Activities list now inside wrapper */
+.activities-list {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
   padding: 0 10px;
   display: flex;
   flex-direction: column;
@@ -376,11 +392,61 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+
+  /* Ensure touch scrolling works properly */
+  touch-action: pan-y; /* Allow vertical touch scrolling */
+  pointer-events: auto !important; /* Ensure it receives its own events */
+  z-index: 25 !important; /* Higher z-index to ensure it's on top when scrolling */
+  box-sizing: border-box;
+  
+  /* Add bottom padding to ensure content isn't hidden behind indicator */
+  padding-bottom: 12px;
+
+  /* Fix scrollbar visibility */
+  scrollbar-width: none !important; /* Hide Firefox scrollbar by default */
+  -ms-overflow-style: none !important; /* Hide IE/Edge scrollbar by default */
 }
 
+/* Force no scrollbar for cards with 2 or fewer items */
+.activities-list.two-items-or-less,
+.carousel-card .activities-list.two-items-or-less {
+  overflow: hidden !important; /* Absolutely never show scrolling on these */
+  overflow-y: hidden !important; /* Just in case */
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  max-height: none !important; /* Don't restrict height */
+}
+
+/* Even stronger selector to ensure scrollbars stay hidden */
+.carousel-card .card-content .activities-wrapper .activities-list.two-items-or-less::-webkit-scrollbar,
+.activities-list.two-items-or-less::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Force indicator to be truly invisible */
+.activities-list.two-items-or-less + .activities-list-indicator,
+.carousel-card .activities-list.two-items-or-less + .activities-list-indicator {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Fix scrollbar visibility */
+.activities-list.two-items-or-less::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Fix the span styling in the activities list */
 .activities-list span {
   display: block;
-  margin: 8px 0;
+  width: 100%;
+  margin: 6px 0;  /* Reduced margins */
   font-size: 1rem;
   font-weight: 500;
   padding: 8px 15px;
@@ -388,10 +454,105 @@
   border-radius: 20px;
   min-width: 70%;
   text-align: center;
-  -webkit-user-select: none; /* Correct order */
+  -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  box-sizing: border-box;
+  height: var(--activity-item-height, 42px); /* Set fixed height for calculation */
+}
+
+/* Indicator always at bottom, toggle visibility instead of changing position */
+.activities-list-indicator {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 3px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.6), transparent);
+  width: 50%;
+  margin-left: 25%;
+  margin-right: 25%;
+  pointer-events: none;
+  opacity: 0; /* Hidden by default */
+  transition: opacity 0.2s ease;
+  z-index: 100 !important; /* Ensure it's above all content */
+}
+
+/* Use visible class instead of can-scroll on the indicator itself */
+.activities-list-indicator.visible {
+  opacity: 0.8; /* More visible */
+}
+
+/* Remove old ::after content since we're using the separate indicator element */
+.activities-list::after {
+  display: none;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .activities-wrapper {
+    max-height: calc(var(--activity-item-height, 38px) * 2.2); /* Slightly smaller on mobile */
+  }
+  
+  .activities-list span {
+    padding: 6px 12px; /* Smaller padding on mobile */
+    margin: 5px 0;
+    font-size: 0.95rem;
+    height: var(--activity-item-height, 38px);
+  }
+  
+  .activities-list-indicator {
+    height: 4px; /* Even thicker on mobile for better visibility */
+  }
+}
+
+/* Even smaller screens */
+@media (max-width: 480px) {
+  .activities-wrapper {
+    max-height: calc(var(--activity-item-height, 36px) * 2.1);
+    padding: 0;
+  }
+  
+  .activities-list {
+    padding: 0 8px;
+  }
+  
+  .activities-list span {
+    padding: 6px 10px;
+    margin: 4px 0;
+    font-size: 0.9rem;
+    height: var(--activity-item-height, 36px);
+  }
+}
+
+/* Fix for ensuring touch scrolling works correctly */
+@media (hover: none) {
+  .activities-list {
+    /* Ensure touch scrolling is persistent */
+    touch-action: pan-y !important;
+  }
+  
+  /* Make sure card events don't interfere with list scrolling */
+  .carousel-card .activities-list {
+    pointer-events: auto !important;
+  }
+  
+  /* Items should be easy to see and scroll through */
+  .activities-list span {
+    min-height: 30px; /* Ensure minimum touch target size */
+  }
+  
+  /* Prevent any parent elements from capturing touch events on the list */
+  .card-content {
+    /* Make sure parent doesn't block scroll events */
+    touch-action: auto !important;
+  }
+  
+  /* Ensure the indicator is more prominent on touch devices */
+  .activities-list-indicator.visible {
+    opacity: 0.9;
+  }
 }
 
 /* Carousel indicators (dots) */
@@ -652,8 +813,11 @@
     opacity: 0.5;
   }
   
-  .activities-list {
+  .activities-wrapper {
     max-height: 90px;
+  }
+  
+  .activities-list {
     font-size: 0.9rem;
   }
   
@@ -708,7 +872,7 @@
     padding: 0.8rem;
   }
   
-  .activities-list {
+  .activities-wrapper {
     max-height: 75px;
   }
   
@@ -758,6 +922,18 @@
 
   .carousel-card {
     transition: all 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  /* Make activities list scrolling override card dragging on mobile */
+  .activities-wrapper {
+    position: relative;
+    z-index: 15; /* Higher than cards during interaction */
+    touch-action: pan-y !important; /* Enforce vertical scrolling */
+  }
+  
+  /* Ensure cards don't receive events when scrolling activities */
+  .carousel-card.touch-dragging .activities-list {
+    pointer-events: auto !important;
   }
 }
 
@@ -850,6 +1026,19 @@
                 opacity var(--card-transition-duration) var(--card-transition-timing),
                 z-index 0s !important;
   }
+
+  /* Make sure desktop version has correct scrolling */
+  .activities-list {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    padding-bottom: 20px !important; /* More padding to avoid content behind indicator */
+  }
+
+  /* Force mouse interactions to work */
+  .carousel-card .activities-list {
+    pointer-events: auto !important;
+  }
 }
 
 /* Transición optimizada para clic en tarjeta lateral */
@@ -867,4 +1056,99 @@
 .carousel-card.next-card.clicked {
   transform: translateX(45%) scale(0.92);
   opacity: 0.95;
+}
+
+/* Desktop specific improvements for activities wrapper and indicator */
+@media (min-width: 769px) {
+  .activities-wrapper {
+    max-height: calc(var(--activity-item-height, 42px) * 2.5); /* Even bigger to guarantee 2 items fit */
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    /* Subtle shadow to create depth effect */
+    box-shadow: inset 0 -5px 10px -5px rgba(0, 0, 0, 0.15);
+  }
+  
+  .activities-list {
+    /* Enhanced scrollbar for desktop */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.05);
+    padding-right: 12px; /* Allow space for custom scrollbar */
+    padding-bottom: 16px; /* Increased padding to prevent content hiding behind indicator */
+    pointer-events: auto !important; /* Ensure scrolling works */
+    cursor: auto; /* Use default cursor for scrollable content */
+    touch-action: pan-y; /* Ensure vertical scrolling works */
+  }
+  
+  /* Fix scrollbar only showing when needed */
+  .activities-list.scrollable::-webkit-scrollbar {
+    width: 6px; /* Slightly wider scrollbar on desktop */
+    display: block;
+  }
+  
+  .activities-list:not(.scrollable)::-webkit-scrollbar {
+    width: 0;
+    display: none;
+  }
+  
+  .activities-list.scrollable {
+    scrollbar-width: thin;
+  }
+  
+  .activities-list:not(.scrollable) {
+    scrollbar-width: none;
+  }
+  
+  /* Enhanced span styling in the activities list */
+  .activities-list span {
+    transition: transform 0.2s ease, background-color 0.2s ease;
+  }
+  
+  .activities-list span:hover {
+    transform: translateY(-2px);
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+  
+  /* More elegant indicator on desktop */
+  .activities-list-indicator {
+    height: 4px;
+    width: 40%;
+    margin-left: 30%;
+    margin-right: 30%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0));
+    bottom: 2px;
+    border-radius: 2px;
+  }
+  
+  .activities-list-indicator.visible {
+    opacity: 0.7;
+  }
+  
+  /* Add hover effect to indicator for better visual feedback */
+  .activities-wrapper:hover .activities-list-indicator.visible {
+    opacity: 0.9;
+    width: 45%;
+    margin-left: 27.5%;
+    margin-right: 27.5%;
+    transition: all 0.3s ease;
+  }
+}
+
+/* Ensure mouse wheel scrolling is smooth on desktop browsers */
+@media (min-width: 769px) {
+  .activities-list {
+    scroll-behavior: smooth;
+  }
+  
+  /* Support for specific browsers that support scroll snap */
+  @supports (scroll-snap-type: y proximity) {
+    .activities-list {
+      scroll-snap-type: y proximity;
+      scroll-padding: 5px;
+    }
+    
+    .activities-list span {
+      scroll-snap-align: start;
+    }
+  }
 }
