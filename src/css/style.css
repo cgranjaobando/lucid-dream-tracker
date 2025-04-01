@@ -1,0 +1,281 @@
+/* filepath: c:\Users\cgran\PycharmProjects\Oliveruras\LucidDreamsApp\lucid-dream-tracker\src\css\style.css */
+/* Main styles for Lucid Dreams App */
+
+/* Reset and base setup */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(to right, #141e30, #243b55);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 10px;
+  line-height: 1.4;
+  position: relative;
+}
+
+/* Header styling */
+header {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto 15px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  font-size: clamp(1.2rem, 5vw, 2rem);
+  text-align: center;
+  margin-bottom: 12px;
+  padding: 0 5px;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+/* Toggle button */
+#toggleView {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+#toggleView:hover {
+  background-color: #2980b9;
+}
+
+/* Main content area */
+main {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Grid view styles */
+.grid-view {
+  width: 100%;
+  flex: 1;
+}
+
+/* Calendar grid */
+#calendar {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  width: 100%;
+  padding: 10px 0;
+}
+
+.day {
+  background-color: #2c3e50;
+  padding: 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.day:hover {
+  transform: scale(1.03);
+  background-color: #3a4a5e;
+}
+
+.day.completed {
+  background-color: #27ae60;
+}
+
+.day strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.day small {
+  font-size: 0.8rem;
+  color: #bdc3c7;
+}
+
+/* Progress bar */
+.progress-bar {
+  width: 100%;
+  background-color: #34495e;
+  border-radius: 20px;
+  margin: 5px 0 10px 0;
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.progress-fill {
+  height: 15px;
+  width: 0%;
+  background: linear-gradient(to right, #2ecc71, #27ae60);
+  transition: width 0.3s ease-in-out;
+}
+
+/* Advice section */
+.advice {
+  width: 100%;
+  background-color: #2c3e50;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin: 15px 0 10px 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.advice h2 {
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.advice p {
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+
+/* Add Instagram-like gradients for the carousel cards */
+.carousel-card .card-content {
+  background: linear-gradient(135deg, #1f2d3a 0%, #2c3e50 100%);
+}
+
+.carousel-card.completed .card-content {
+  background: linear-gradient(135deg, #1e8449 0%, #27ae60 100%);
+}
+
+/* Additional styling for Instagram-like experience */
+.activities-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.activities-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.activities-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+  
+  #calendar {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+  
+  .day {
+    padding: 0.9rem;
+  }
+  
+  .advice {
+    padding: 1.2rem;
+  }
+  
+  h1 {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 8px;
+  }
+  
+  #calendar {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+  }
+  
+  .day {
+    padding: 0.8rem;
+  }
+  
+  .advice {
+    padding: 1rem;
+    margin: 10px 0;
+  }
+  
+  .progress-fill {
+    height: 12px;
+  }
+  
+  header {
+    margin-bottom: 10px;
+  }
+  
+  h1 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+  
+  #toggleView {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 5px;
+  }
+  
+  #calendar {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 6px;
+  }
+  
+  .day {
+    padding: 0.7rem;
+  }
+  
+  .day strong {
+    font-size: 0.9rem;
+  }
+  
+  .day small {
+    font-size: 0.7rem;
+  }
+  
+  .advice p {
+    font-size: 0.8rem;
+  }
+  
+  .advice {
+    padding: 0.9rem;
+  }
+  
+  .advice h2 {
+    font-size: 1.1rem;
+  }
+}

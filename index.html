@@ -1,142 +1,69 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seguimiento de Sueños Lúcidos - 30 Días</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Seguimiento de Sueños Lúcidos - 30 Días</title>
+    <link rel="stylesheet" href="src/css/style.css">
+    <link rel="stylesheet" href="src/css/carousel.css">
+    <link rel="stylesheet" href="src/css/popup.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body>
-  <h1>Seguimiento de Sueños Lúcidos - 30 Días</h1>
-  
-  <div class="progress-bar">
-    <div id="progressFill" class="progress-fill"></div>
-  </div>
-  
-  <div class="calendar" id="calendar"></div>
-  
-  <!-- Popup principal (día) -->
-  <div id="popup" class="popup" onclick="closePopup()">
-    <div class="popup-content" onclick="event.stopPropagation()">
-      <h2 id="popupTitle"></h2>
-      <div id="popupDesc" class="activity-list"></div>
-      <div class="task-progress-bar">
-        <div id="taskProgressFill" class="progress-fill"></div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Popup secundario (descripción extendida) -->
-  <div id="activityPopup" class="activity-popup" onclick="closeActivityPopup()">
-    <div class="activity-popup-content" onclick="event.stopPropagation()">
-      <button class="close-btn" onclick="closeActivityPopup()">Cerrar</button>
-      <h2 id="activityPopupTitle"></h2>
-      <div id="activityPopupContent"></div>
-    </div>
-  </div>
-  
-  <div class="advice">
-    <h2>Consejos Generales</h2>
-    <p>• Evita cafeína después de las 2 p.m.</p>
-    <p>• Evita pantallas al menos 30 minutos antes de dormir.</p>
-    <p>• Despiértate naturalmente siempre que sea posible.</p>
-    <p>• Completa tu diario incluso si te encuentras con “no recuerdo nada”.</p>
-  </div>
-  
-  <script src="script.js"></script>
-  <script>
-    function updateTaskProgress() {
-      const checkboxes = document.querySelectorAll(".task-checkbox");
-      const totalTasks = checkboxes.length;
-      const completedTasks = Array.from(checkboxes).filter((cb) => cb.checked).length;
-      const percent = (completedTasks / totalTasks) * 100;
-
-      document.getElementById("taskProgressFill").style.width = `${percent}%`;
-
-      // Save the state of the checkboxes in localStorage
-      const day = selectedDayBox.dataset.day;
-      const checkboxStates = Array.from(checkboxes).map((cb) => cb.checked);
-      localStorage.setItem(`day-${day}-tasks`, JSON.stringify(checkboxStates));
-
-      // Mark the day as completed if all tasks are done
-      if (completedTasks === totalTasks) {
-        selectedDayBox.classList.add("completed");
-      } else {
-        selectedDayBox.classList.remove("completed");
-      }
-
-      updateProgress(); // Update the overall progress bar
-    }
-
-    function updateProgress() {
-      const totalDays = plan.length;
-      const completedDays = document.querySelectorAll(".day.completed").length;
-      const percent = (completedDays / totalDays) * 100;
-
-      document.getElementById("progressFill").style.width = `${percent}%`;
-    }
-
-    function showPopup(dayBox) {
-      selectedDayBox = dayBox;
-      const popup = document.getElementById("popup");
-      const title = document.getElementById("popupTitle");
-      const desc = document.getElementById("popupDesc");
-      const activityKeys = JSON.parse(dayBox.dataset.activities);
-
-      title.innerHTML = `Día ${dayBox.dataset.day}`;
-      desc.innerHTML = activityKeys
-        .map(
-          (key, index) => `
-          <div style="margin-bottom: 0.5rem;">
-            <div style="display: flex; align-items: center;">
-              <input type="checkbox" class="task-checkbox" data-task="${key}" onchange="updateTaskProgress()">
-              <strong class="activity-name" onclick="openActivityPopup('${key}')">${key}</strong>
+    <header>
+        <h1>Seguimiento de Sueños Lúcidos - 30 Días</h1>
+        <nav>
+            <button id="toggleView">Cambiar a Vista de Calendario</button>
+        </nav>
+    </header>
+    <main>
+        <!-- Progress bar will be inserted here by JavaScript -->
+        <section id="carouselView" class="carousel-view">
+            <div class="carousel-container">
+                <div class="carousel">
+                    <!-- Placeholder for portrait-oriented day cards -->
+                </div>
+                <div class="carousel-indicators">
+                    <!-- Placeholder for stylized dots -->
+                </div>
             </div>
-            <small>${activities[key]}</small>
-            <span class="instruction-toggle" onclick="toggleInstructionDetail('${key}', ${index})">Ver más</span>
-            <div id="instructionDetail_${key}_${index}" class="instruction-detail" style="display: none;"></div>
-          </div>
-        `
-        )
-        .join("");
-
-      // Load the saved state of the checkboxes from localStorage
-      const day = dayBox.dataset.day;
-      const savedStates = JSON.parse(localStorage.getItem(`day-${day}-tasks`)) || [];
-      const checkboxes = document.querySelectorAll(".task-checkbox");
-      checkboxes.forEach((checkbox, index) => {
-        checkbox.checked = savedStates[index] || false;
-      });
-
-      updateTaskProgress(); // Initialize the task progress bar
-      popup.classList.add("active");
-    }
-
-    function initializeCalendar() {
-      const calendar = document.getElementById("calendar");
-      plan.forEach((activities, i) => {
-        const dayBox = document.createElement("div");
-        dayBox.classList.add("day");
-        dayBox.dataset.day = i + 1;
-        dayBox.dataset.activities = JSON.stringify(activities);
-
-        // Load saved state for the day
-        const savedStates = JSON.parse(localStorage.getItem(`day-${i + 1}-tasks`)) || [];
-        const isCompleted = savedStates.every((state) => state === true);
-
-        if (isCompleted) {
-          dayBox.classList.add("completed");
-        }
-
-        dayBox.innerHTML = `<strong>Día ${i + 1}</strong><br><small>${activities.join(", ")}</small>`;
-        dayBox.addEventListener("click", () => showPopup(dayBox));
-        calendar.appendChild(dayBox);
-      });
-
-      // Update the general progress bar
-      updateProgress();
-    }
-  </script>
+            <div class="small-carousel">
+                <!-- Placeholder for smaller squares representing days -->
+            </div>
+        </section>
+        <section id="gridView" class="grid-view" style="display: none;">
+            <div id="calendar"></div>
+        </section>
+        
+        <div class="advice">
+            <h2>Consejos Generales</h2>
+            <p>• Evita cafeína después de las 2 p.m.</p>
+            <p>• Evita pantallas al menos 30 minutos antes de dormir.</p>
+            <p>• Despiértate naturalmente siempre que sea posible.</p>
+            <p>• Completa tu diario incluso si te encuentras con "no recuerdo nada".</p>
+        </div>
+    </main>
+    <div id="popup" class="popup" onclick="window.closePopup()">
+        <div class="popup-content" onclick="event.stopPropagation()">
+            <h2 id="popupTitle"></h2>
+            <div id="popupDesc" class="activity-list"></div>
+            <div class="task-progress-bar">
+                <div id="taskProgressFill" class="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+    <div id="activityPopup" class="activity-popup" onclick="window.closeActivityPopup()">
+        <div class="activity-popup-content" onclick="event.stopPropagation()">
+            <button class="close-btn" onclick="window.closeActivityPopup()">Cerrar</button>
+            <h2 id="activityPopupTitle"></h2>
+            <div id="activityPopupContent"></div>
+        </div>
+    </div>
+    <!-- Load scripts in the correct order -->
+    <script src="src/js/utils.js"></script>
+    <script src="src/js/script.js"></script>
+    <script src="src/js/carousel.js"></script>
+    <script src="src/views/grid.js"></script>
 </body>
 </html>
