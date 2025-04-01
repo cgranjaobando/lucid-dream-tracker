@@ -1,5 +1,16 @@
 /* filepath: c:\Users\cgran\PycharmProjects\Oliveruras\LucidDreamsApp\lucid-dream-tracker\src\css\carousel.css */
 
+/* Variables CSS para mantener la consistencia */
+:root {
+  --card-transition-duration: 0.45s;
+  --card-transition-timing: cubic-bezier(0.22, 0.1, 0.2, 1);
+  --card-scale-current: 1;
+  --card-scale-side: 0.85;
+  --card-scale-side-hover: 0.9;
+  --card-opacity-side: 0.8;
+  --card-side-offset: 15%;
+}
+
 /* Carousel container */
 .carousel-container {
   position: relative;
@@ -100,14 +111,16 @@
   cursor: grabbing; /* Change cursor when actively dragging */
 }
 
-/* Common card styles - more vertical like Reels */
+/* Common card styles - improved transitions */
 .carousel-card {
   position: absolute;
   width: 65%; /* Narrower width */
   max-width: 350px;
   height: 90%; /* Taller height */
   max-height: 580px;
-  transition: all 0.3s ease-in-out;
+  transition: all var(--card-transition-duration) var(--card-transition-timing);
+  transform-origin: center center; /* Ensures consistent scaling */
+  will-change: transform, opacity;
   box-sizing: border-box;
   border-radius: 12px;
   overflow: hidden;
@@ -122,6 +135,64 @@
   transform-style: preserve-3d;
   cursor: pointer !important; /* Force cursor to be pointer */
   pointer-events: auto !important; /* Force pointer events to be enabled */
+}
+
+/* Transition state classes for animation effects - mejoradas para simetría */
+.carousel-card.moving-left,
+.carousel-card.moving-right {
+  transition: transform var(--card-transition-duration) var(--card-transition-timing), opacity var(--card-transition-duration) ease;
+}
+
+/* Smooth transitions when moving cards - balanced for both directions */
+.carousel-card.moving-left.current-card {
+  transform: translateX(-100%) scale(var(--card-scale-side));
+  opacity: var(--card-opacity-side);
+}
+
+.carousel-card.moving-right.current-card {
+  transform: translateX(0%) scale(var(--card-scale-side));
+  opacity: var(--card-opacity-side);
+}
+
+.carousel-card.moving-left.next-card {
+  transform: translateX(-50%) scale(var(--card-scale-current));
+  opacity: 1;
+  z-index: 10;
+}
+
+.carousel-card.moving-right.prev-card {
+  transform: translateX(-50%) scale(var(--card-scale-current));
+  opacity: 1;
+  z-index: 10;
+}
+
+.carousel-card.moving-left.prev-card {
+  opacity: 0.5;
+  transform: translateX(-85%) scale(0.7);
+}
+
+.carousel-card.moving-right.next-card {
+  opacity: 0.5;
+  transform: translateX(85%) scale(0.7);
+}
+
+/* Mejorar las animaciones de entrada para mayor simetría */
+@keyframes enterFromRight {
+  0% { transform: translateX(90%) scale(0.8); opacity: 0.3; }
+  70% { transform: translateX(60%) scale(0.83); opacity: 0.7; }
+  100% { transform: translateX(50%) scale(0.85); opacity: 0.8; }
+}
+
+@keyframes enterFromLeft {
+  0% { transform: translateX(-90%) scale(0.8); opacity: 0.3; }
+  70% { transform: translateX(-60%) scale(0.83); opacity: 0.7; }
+  100% { transform: translateX(-50%) scale(0.85); opacity: 0.8; }
+}
+
+/* Improve dragging effect */
+.carousel-card.dragging {
+  transition: none !important;
+  will-change: transform, opacity;
 }
 
 /* Asegurar que el contenido interior de las tarjetas no bloquea los clics */
@@ -146,78 +217,48 @@
 
 /* Current card needs higher z-index to be on top */
 .carousel-card.current-card {
-  z-index: 3 !important;
+  left: 50%;
+  transform: translateX(-50%) scale(var(--card-scale-current));
+  z-index: 10;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  opacity: 1 !important;
+  animation: none;
   pointer-events: auto !important;
-  z-index: 10 !important; /* Asegurar que está en la capa superior */
-}
-
-/* Dragging state styles for cards */
-.carousel-card.dragging {
-  transition: none !important; /* Disable transitions during drag for real-time feedback */
-  will-change: transform; /* Optimize for animation performance */
-}
-
-.carousel-card.dragging .card-content {
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4); /* Enhanced shadow during drag */
-}
-
-/* Touch dragging styles - similar to mouse dragging but optimized for touch */
-.carousel-card.touch-dragging {
-  transition: none !important; /* Disable transitions during touch for real-time feedback */
-  will-change: transform; /* Optimize for animation performance on mobile */
-}
-
-.carousel-card.touch-dragging .card-content {
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4); /* Enhanced shadow during touch drag */
 }
 
 /* Previous card positioning - closer spacing for desktop */
 .carousel-card.prev-card {
-  left: 10%; /* Moved from -5% to bring closer */
-  transform: translateX(-25%) scale(0.85); /* Larger scale for closer appearance */
-  opacity: 0.8 !important;
-  z-index: 1;
+  left: var(--card-side-offset);
+  transform: translateX(-50%) scale(var(--card-scale-side));
+  opacity: var(--card-opacity-side) !important;
+  z-index: 5;
   pointer-events: auto !important;
   cursor: pointer !important; /* Make side cards clickable */
-}
-
-/* Current card positioning */
-.carousel-card.current-card {
-  left: 50%;
-  transform: translateX(-50%) scale(1);
-  z-index: 3;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-  animation: cardPop 0.3s ease-out;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
-
-@keyframes cardPop {
-  0% { transform: translateX(-50%) scale(0.9); }
-  50% { transform: translateX(-50%) scale(1.05); }
-  100% { transform: translateX(-50%) scale(1); }
+  transform-origin: center right;
 }
 
 /* Next card positioning - closer spacing for desktop */
 .carousel-card.next-card {
-  right: 10%; /* Moved from -5% to bring closer */
-  transform: translateX(25%) scale(0.85); /* Larger scale for closer appearance */
-  opacity: 0.8 !important;
-  z-index: 1;
+  right: var(--card-side-offset);
+  transform: translateX(50%) scale(var(--card-scale-side));
+  opacity: var(--card-opacity-side) !important;
+  z-index: 5;
   pointer-events: auto !important;
   cursor: pointer !important; /* Make side cards clickable */
+  transform-origin: center left;
 }
 
 /* Add a hover effect to make it clear they're interactive */
-.carousel-card.prev-card:hover,
-.carousel-card.next-card:hover {
-  transform: translateX(-25%) scale(0.9) !important; /* Slightly larger on hover */
+.carousel-card.prev-card:hover {
+  transform: translateX(-50%) scale(var(--card-scale-side-hover)) !important;
   opacity: 0.9 !important;
-  transition: all 0.3s ease-in-out !important;
+  transition: all 0.25s ease-out !important;
 }
 
 .carousel-card.next-card:hover {
-  transform: translateX(25%) scale(0.9) !important;
+  transform: translateX(50%) scale(var(--card-scale-side-hover)) !important;
+  opacity: 0.9 !important;
+  transition: all 0.25s ease-out !important;
 }
 
 /* Ensure content doesn't interfere with clicks */
@@ -438,7 +479,7 @@
   .carousel-card {
     width: 75%;
     max-width: 320px;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Elastic bounce effect */
+    transition: all 0.4s ease-out; /* Curva sin rebote para móvil */
     -webkit-tap-highlight-color: transparent; /* Remove default tap highlight on Safari */
   }
   
@@ -462,14 +503,14 @@
   
   /* More visible side cards on mobile */
   .carousel-card.prev-card {
-    left: -8%;
-    transform: translateX(-20%) scale(0.75);
+    left: 5%;
+    transform: translateX(-50%) scale(0.75);
     opacity: 0.7; /* Increased from 0.6 for better visibility */
   }
   
   .carousel-card.next-card {
-    right: -8%;
-    transform: translateX(20%) scale(0.75);
+    right: 5%;
+    transform: translateX(50%) scale(0.75);
     opacity: 0.7; /* Increased from 0.6 for better visibility */
   }
   
@@ -481,18 +522,6 @@
   }
   
   /* Return to wider spacing on mobile */
-  .carousel-card.prev-card {
-    left: -10%;
-    transform: translateX(-20%) scale(0.75);
-    opacity: 0.6;
-  }
-  
-  .carousel-card.next-card {
-    right: -10%;
-    transform: translateX(20%) scale(0.75);
-    opacity: 0.6;
-  }
-  
   .activities-list {
     max-height: 130px;
   }
@@ -515,6 +544,30 @@
   .carousel-card.next-card {
     backface-visibility: hidden; /* Prevent flickering during transitions */
     -webkit-backface-visibility: hidden;
+  }
+
+  /* Improve mobile touch feedback */
+  .carousel-card.touch-dragging {
+    transition: transform 0.05s linear !important;
+    will-change: transform, opacity;
+  }
+
+  .carousel-card.moving-left.current-card {
+    transform: translateX(-100%) scale(0.75);
+  }
+  
+  .carousel-card.moving-right.current-card {
+    transform: translateX(0%) scale(0.75);
+  }
+  
+  @keyframes enterFromRight {
+    0% { transform: translateX(100%) scale(0.7); opacity: 0.2; }
+    100% { transform: translateX(50%) scale(0.75); opacity: 0.7; }
+  }
+  
+  @keyframes enterFromLeft {
+    0% { transform: translateX(-100%) scale(0.7); opacity: 0.2; }
+    100% { transform: translateX(-50%) scale(0.75); opacity: 0.7; }
   }
 }
 
@@ -645,6 +698,10 @@
     0% { transform: translateX(-50%) scale(0.95); }
     100% { transform: translateX(-50%) scale(1); }
   }
+
+  .carousel-card {
+    transition: all 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+  }
 }
 
 /* Update mobile transition to be faster and without bounce */
@@ -681,8 +738,56 @@
   }
   
   /* Añadir un efecto visual al hover para indicar que es clickable */
-  .carousel-card.current-card:hover {
-    transform: translateX(-50%) scale(1.02);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  .carousel-card.current-card {
+    transition: all var(--card-transition-duration) var(--card-transition-timing);
   }
+
+  .carousel-card.current-card:hover {
+    transform: translateX(-50%) scale(calc(var(--card-scale-current) + 0.02));
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Posicionamiento equilibrado para las tarjetas en escritorio */
+  .carousel-card.prev-card {
+    left: var(--card-side-offset);
+    transform: translateX(-50%) scale(var(--card-scale-side));
+    opacity: var(--card-opacity-side) !important;
+    z-index: 5;
+  }
+  
+  .carousel-card.next-card {
+    right: var(--card-side-offset);
+    transform: translateX(50%) scale(var(--card-scale-side));
+    opacity: var(--card-opacity-side) !important;
+    z-index: 5;
+  }
+  
+  /* Mejora sutil en efecto de tarjeta actual al moverse */
+  .carousel-card.moving-left.current-card {
+    transform: translateX(-100%) scale(var(--card-scale-side));
+  }
+  
+  .carousel-card.moving-right.current-card {
+    transform: translateX(0%) scale(var(--card-scale-side));
+  }
+  
+  /* Ajustes especiales para transiciones más fluidas */
+  .carousel-card.current-card {
+    transition: all var(--card-transition-duration) var(--card-transition-timing);
+  }
+}
+
+/* Transición optimizada para clic en tarjeta lateral */
+.carousel-card.clicked {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.carousel-card.prev-card.clicked {
+  transform: translateX(-45%) scale(0.9);
+  opacity: 0.9;
+}
+
+.carousel-card.next-card.clicked {
+  transform: translateX(45%) scale(0.9);
+  opacity: 0.9;
 }

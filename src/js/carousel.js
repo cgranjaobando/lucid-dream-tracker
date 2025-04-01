@@ -5,6 +5,12 @@
 
 let carouselInitialized = false; // Flag to prevent multiple initializations
 
+// Definir las funciones globales fuera de initializeCarousel
+let currentSlideIndex = 0;
+
+// Forward declarations of functions that need to be globally available
+let goToNextSlide, goToPrevSlide, goToSlide, updateCarouselDisplay;
+
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize carousel once plan data is available
   if (typeof plan === 'undefined') {
@@ -30,9 +36,6 @@ function initializeCarousel() {
   console.log('Initializing carousel with plan data');
   carouselInitialized = true; // Set flag to prevent re-initialization
   
-  // Initial slide position
-  let currentSlideIndex = 0;
-  
   // Variables for drag and swipe functionality
   let isDragging = false;
   let startDragX = 0;
@@ -51,44 +54,64 @@ function initializeCarousel() {
     if (index >= totalSlides) return 0;
     return index;
   }
-  
-  // Function to update carousel display
-  function updateCarouselDisplay() {
+
+  // Asignar las funciones a las variables globales que declaramos arriba
+  updateCarouselDisplay = function() {
     const carousel = document.querySelector('.carousel');
     if (!carousel) {
       console.error('Carousel element not found');
       return;
     }
     
-    // Get indices for visible cards (previous, current, next)
+    // Store the previous slide direction
+    const wasMovingLeft = document.querySelector('.carousel-card.moving-left');
+    const wasMovingRight = document.querySelector('.carousel-card.moving-right');
+    
+    // Clear carousel with proper positioning
+    carousel.innerHTML = '';
+    
+    // Get indices for visible cards
     const prevIndex = getSlideIndex(currentSlideIndex - 1);
     const nextIndex = getSlideIndex(currentSlideIndex + 1);
     
-    // Clear carousel
-    carousel.innerHTML = '';
+    // Add all three cards with proper positioning
+    const prevCard = createCarouselCard(prevIndex, 'prev-card');
+    const currentCard = createCarouselCard(currentSlideIndex, 'current-card');
+    const nextCard = createCarouselCard(nextIndex, 'next-card');
     
-    // Create and add previous day card
-    createCarouselCard(prevIndex, 'prev-card');
+    // Apply entrance animations based on previous direction
+    if (wasMovingLeft) {
+      prevCard.classList.add('entering-left');
+    }
+    if (wasMovingRight) {
+      nextCard.classList.add('entering-right');
+    }
     
-    // Create and add current day card
-    createCarouselCard(currentSlideIndex, 'current-card');
-    
-    // Create and add next day card
-    createCarouselCard(nextIndex, 'next-card');
-    
-    // Update indicators
+    // Update indicators and small cards
     updateIndicators();
-    
-    // Update small cards
     updateSmallCards();
     
     // Setup card clicks after updating the display
     setupCardClicks();
     
-    // Debug info
-    const cards = document.querySelectorAll('.carousel-card');
-    console.log(`Carousel updated: ${cards.length} cards displayed`);
-  }
+    // Limpiar clases y estilos transitorios de todas las tarjetas
+    const clearAllTransitions = () => {
+      document.querySelectorAll('.carousel-card').forEach(card => {
+        card.classList.remove('entering-left', 'entering-right', 'moving-left', 'moving-right', 'clicked');
+        // Eliminar cualquier estilo inline que pueda interferir
+        card.style.transition = '';
+        card.style.opacity = '';
+        card.style.transform = '';
+        card.style.pointerEvents = 'auto';
+      });
+      
+      // Asegurarse de eliminar la clase de transición activa
+      document.body.classList.remove('carousel-transition-active');
+    };
+    
+    // Limpia las transiciones después de completar la animación
+    setTimeout(clearAllTransitions, 500);
+  };
   
   // Create a single carousel card
   function createCarouselCard(dayIndex, className) {
@@ -158,7 +181,13 @@ function initializeCarousel() {
           
           if (isPrev || isNext) {
             console.log(`Navegando a día ${day}`);
-            goToSlide(dayIndex);
+            // Añadir clase de clic para mejor animación
+            newCard.classList.add('clicked');
+            
+            // Pequeño retraso para permitir que la animación "clicked" sea visible
+            setTimeout(() => {
+              goToSlide(dayIndex);
+            }, 150);
           } else if (isCurrent) {
             console.log(`Mostrando popup para día ${day}`);
             if (window.showDayPopup) {
@@ -185,7 +214,14 @@ function initializeCarousel() {
               
               if (isPrev || isNext) {
                 console.log(`Navegando a día ${day}`);
-                goToSlide(dayIndex);
+                
+                // Añadir clase de clic para mejor feedback visual
+                newCard.classList.add('clicked');
+                
+                // Pequeño retraso para permitir que la animación "clicked" sea visible
+                setTimeout(() => {
+                  goToSlide(dayIndex);
+                }, 150);
               } else if (isCurrent) {
                 console.log(`Mostrando popup para día ${day}`);
                 if (window.showDayPopup) {
@@ -214,7 +250,6 @@ function initializeCarousel() {
   // Update indicators
   function updateIndicators() {
     const indicators = document.querySelectorAll('.indicator');
-    
     indicators.forEach((indicator, index) => {
       if (index === currentSlideIndex) {
         indicator.classList.add('active');
@@ -239,22 +274,111 @@ function initializeCarousel() {
     });
   }
   
-  // Function to go to next slide
-  function goToNextSlide() {
-    currentSlideIndex = getSlideIndex(currentSlideIndex + 1);
-    updateCarouselDisplay();
-  }
+  // Function to go to next slide with enhanced animation
+  goToNextSlide = function() {
+    // Get the current cards
+    const prevCard = document.querySelector('.carousel-card.prev-card');
+    const currentCard = document.querySelector('.carousel-card.current-card');
+    const nextCard = document.querySelector('.carousel-card.next-card');
+    
+    // Añadir un bloqueo temporal para prevenir clics múltiples
+    if (document.querySelector('.carousel-transition-active')) {
+      return; // Evita múltiples transiciones simultáneas
+    }
+    document.body.classList.add('carousel-transition-active');
+    
+    // Save original positions to prevent jumping
+    if (currentCard) {
+      currentCard.classList.add('moving-left');
+      currentCard.style.pointerEvents = 'none';
+    }
+    
+    if (nextCard) {
+      nextCard.classList.add('moving-left');
+      nextCard.style.pointerEvents = 'none';
+    }
+    
+    if (prevCard) {
+      // Asegurar que el fade sea consistente
+      prevCard.classList.add('moving-left');
+      prevCard.style.opacity = '0';
+      prevCard.style.pointerEvents = 'none';
+    }
+    
+    // Tiempo exacto para ambas direcciones
+    setTimeout(() => {
+      currentSlideIndex = getSlideIndex(currentSlideIndex + 1);
+      updateCarouselDisplay();
+      
+      // Eliminar el bloqueo después de la transición
+      setTimeout(() => {
+        document.body.classList.remove('carousel-transition-active');
+      }, 100);
+    }, 400);
+  };
   
-  // Function to go to previous slide
-  function goToPrevSlide() {
-    currentSlideIndex = getSlideIndex(currentSlideIndex - 1);
-    updateCarouselDisplay();
-  }
+  // Function to go to previous slide with enhanced animation
+  goToPrevSlide = function() {
+    // Get the current cards
+    const prevCard = document.querySelector('.carousel-card.prev-card');
+    const currentCard = document.querySelector('.carousel-card.current-card');
+    const nextCard = document.querySelector('.carousel-card.next-card');
+    
+    // Añadir un bloqueo temporal para prevenir clics múltiples
+    if (document.querySelector('.carousel-transition-active')) {
+      return; // Evita múltiples transiciones simultáneas
+    }
+    document.body.classList.add('carousel-transition-active');
+    
+    // Save original positions to prevent jumping - balance with forward animation
+    if (currentCard) {
+      currentCard.classList.add('moving-right');
+      currentCard.style.pointerEvents = 'none';
+    }
+    
+    if (prevCard) {
+      prevCard.classList.add('moving-right');
+      prevCard.style.pointerEvents = 'none';
+    }
+    
+    if (nextCard) {
+      // Asegurar que el fade sea idéntico al del prevCard en goToNextSlide
+      nextCard.classList.add('moving-right');
+      nextCard.style.opacity = '0';
+      nextCard.style.pointerEvents = 'none';
+    }
+    
+    // Usar el mismo tiempo que en goToNextSlide
+    setTimeout(() => {
+      currentSlideIndex = getSlideIndex(currentSlideIndex - 1);
+      updateCarouselDisplay();
+      
+      // Eliminar el bloqueo después de la transición
+      setTimeout(() => {
+        document.body.classList.remove('carousel-transition-active');
+      }, 100);
+    }, 400);
+  };
   
-  // Function to go to a specific slide
-  function goToSlide(slideIndex) {
+  // Function to go to a specific slide with smoother transition
+  goToSlide = function(slideIndex) {
     if (slideIndex >= 0 && slideIndex < plan.length) {
       console.log(`Going to slide ${slideIndex + 1}`);
+      
+      // Calculate direction of movement
+      const direction = slideIndex > currentSlideIndex ? 'left' : 'right';
+      
+      // Add appropriate animation class based on direction
+      const cards = document.querySelectorAll('.carousel-card');
+      cards.forEach(card => {
+        if (direction === 'left') {
+          card.classList.add('moving-left');
+        } else if (direction === 'right') {
+          card.classList.add('moving-right');
+        }
+        // Temporarily disable pointer events during transition
+        card.style.pointerEvents = 'none';
+      });
       
       // Store previous slide
       const previousSlide = currentSlideIndex;
@@ -262,35 +386,23 @@ function initializeCarousel() {
       // Update current slide
       currentSlideIndex = slideIndex;
       
-      // Update the display with a small delay to ensure all is updated
+      // Update the display with a delay for animation
       setTimeout(() => {
         updateCarouselDisplay();
-      }, 10);
-      
-      // Add a brief click delay after slide change to prevent accidental double clicks
-      if (previousSlide !== currentSlideIndex) {
-        // Temporarily disable clicks
-        const cards = document.querySelectorAll('.carousel-card');
-        cards.forEach(card => {
-          card.style.pointerEvents = 'none';
-        });
-        
         // Re-enable clicks after animation completes
-        setTimeout(() => {
-          cards.forEach(card => {
-            card.style.pointerEvents = 'auto';
-          });
-          console.log('Card interactions re-enabled');
-        }, 500);
-      }
+        cards.forEach(card => {
+          card.style.pointerEvents = 'auto';
+          card.classList.remove('clicked'); // Ensure no residual state
+        });
+        console.log('Card interactions re-enabled');
+      }, 400);
     }
-  }
-  
+  };
+
   // Setup carousel controls and navigation
   function setupCarouselControls() {
     const carousel = document.querySelector('.carousel');
     const carouselContainer = document.querySelector('.carousel-container');
-    
     if (!carouselContainer || !carousel) {
       console.warn('Carousel container or carousel not found');
       return;
@@ -335,6 +447,7 @@ function initializeCarousel() {
       let isDown = false;
       let startX;
       let scrollLeft;
+      smallCarousel.style.cursor = 'grab';
       
       smallCarousel.addEventListener('mousedown', (e) => {
         e.preventDefault();
@@ -376,37 +489,33 @@ function initializeCarousel() {
         card.classList.add('dragging');
       });
     });
-
+    
     document.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
       
       // Calculate drag distance
       currentDragX = e.clientX;
       const dragDelta = currentDragX - startDragX;
+      const cards = document.querySelectorAll('.carousel-card');
+      const dragPercentage = dragDelta / window.innerWidth;
+      const maxDrag = window.innerWidth * 0.25; // Limit the drag distance for visual consistency
+      const normDelta = Math.max(Math.min(dragDelta, maxDrag), -maxDrag);
       
-      // Only apply visual feedback if dragged more than 5px 
-      if (Math.abs(dragDelta) > 5) {
-        e.preventDefault();
-        
-        // Move all cards proportionally to the drag distance
-        const cards = document.querySelectorAll('.carousel-card');
-        
-        cards.forEach(card => {
-          // Apply different movement amounts based on card position
-          if (card.classList.contains('current-card')) {
-            card.style.transform = `translateX(calc(-50% + ${dragDelta * 0.5}px)) scale(1)`;
-          } else if (card.classList.contains('prev-card')) {
-            card.style.transform = `translateX(calc(-25% + ${dragDelta * 0.3}px)) scale(0.85)`;
-          } else if (card.classList.contains('next-card')) {
-            card.style.transform = `translateX(calc(25% + ${dragDelta * 0.3}px)) scale(0.85)`;
-          }
-        });
-      }
+      cards.forEach(card => {
+        if (card.classList.contains('current-card')) {
+          card.style.transform = `translateX(calc(-50% + ${normDelta * 0.8}px)) scale(${1 - Math.abs(dragPercentage) * 0.05})`;
+        } else if (card.classList.contains('prev-card')) {
+          card.style.transform = `translateX(calc(-50% + ${normDelta * 0.3}px)) scale(0.85)`;
+          card.style.opacity = `${0.8 + Math.max(0, dragPercentage) * 0.2}`;
+        } else if (card.classList.contains('next-card')) {
+          card.style.transform = `translateX(calc(50% + ${normDelta * 0.3}px)) scale(0.85)`;
+          card.style.opacity = `${0.8 + Math.max(0, -dragPercentage) * 0.2}`;
+        }
+      });
     });
 
     document.addEventListener('mouseup', (e) => {
       if (!isDragging) return;
-      
       const dragDistance = startDragX - currentDragX;
       
       // Remove dragging class and reset inline transforms
@@ -488,27 +597,22 @@ function initializeCarousel() {
       // Update current touch position
       touchMoveX = e.touches[0].clientX;
       const touchDelta = touchMoveX - touchStartX;
+      const cards = document.querySelectorAll('.carousel-card');
+      const dragPercentage = touchDelta / window.innerWidth;
+      const maxDrag = window.innerWidth * 0.25; // Limit the drag distance
+      const normDelta = Math.max(Math.min(touchDelta, maxDrag), -maxDrag);
       
-      // Only apply visual feedback if moved more than 5px
-      if (Math.abs(touchDelta) > 5) {
-        // Only prevent default for horizontal drags to avoid blocking vertical scrolling
-        if (Math.abs(touchDelta) > Math.abs(e.touches[0].clientY - e.touches[0].clientY)) {
-          e.preventDefault();
+      cards.forEach(card => {
+        if (card.classList.contains('current-card')) {
+          card.style.transform = `translateX(calc(-50% + ${normDelta * 0.8}px)) scale(${1 - Math.abs(dragPercentage) * 0.05})`;
+        } else if (card.classList.contains('prev-card')) {
+          card.style.transform = `translateX(calc(-50% + ${normDelta * 0.3}px)) scale(0.85)`;
+          card.style.opacity = `${0.8 + Math.max(0, dragPercentage) * 0.2}`;
+        } else if (card.classList.contains('next-card')) {
+          card.style.transform = `translateX(calc(50% + ${normDelta * 0.3}px)) scale(0.85)`;
+          card.style.opacity = `${0.8 + Math.max(0, -dragPercentage) * 0.2}`;
         }
-        
-        // Move cards with finger for immediate visual feedback
-        const cards = document.querySelectorAll('.carousel-card');
-        cards.forEach(card => {
-          // Apply different movement amounts based on card position
-          if (card.classList.contains('current-card')) {
-            card.style.transform = `translateX(calc(-50% + ${touchDelta * 0.5}px)) scale(1)`;
-          } else if (card.classList.contains('prev-card')) {
-            card.style.transform = `translateX(calc(-25% + ${touchDelta * 0.3}px)) scale(0.85)`;
-          } else if (card.classList.contains('next-card')) {
-            card.style.transform = `translateX(calc(25% + ${touchDelta * 0.3}px)) scale(0.85)`;
-          }
-        });
-      }
+      });
     });
 
     carousel.addEventListener('touchend', () => {
@@ -523,7 +627,6 @@ function initializeCarousel() {
       
       if (!wasTap && touchStartX && touchMoveX) {
         const touchDiff = touchStartX - touchMoveX;
-        
         if (Math.abs(touchDiff) > touchThreshold) {
           if (touchDiff > 0) {
             // Swipe left, go to next slide
@@ -542,32 +645,43 @@ function initializeCarousel() {
       touchStartX = null;
       touchMoveX = null;
     });
-    
-    // Keyboard navigation
-    document.addEventListener('keydown', (e) => {
-      // Only respond to arrow keys if carousel view is active
-      if (document.getElementById('carouselView').style.display !== 'none') {
-        if (e.key === 'ArrowRight') {
-          goToNextSlide();
-        } else if (e.key === 'ArrowLeft') {
-          goToPrevSlide();
-        }
-      }
-    });
   }
+  
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    // Only respond to arrow keys if carousel view is active
+    if (document.getElementById('carouselView').style.display !== 'none') {
+      if (e.key === 'ArrowRight') {
+        goToNextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        goToPrevSlide();
+      }
+    }
+  });
+
+  // Initialize the first display
+  updateCarouselDisplay();
   
   // Set up the carousel controls
   setupCarouselControls();
   
-  // Initialize the first display
-  updateCarouselDisplay();
-  
-  // Make functions globally accessible
+  // Make functions globally accessible - now this should work
   window.navigateToSlide = goToSlide;
   window.goToNextSlide = goToNextSlide;
   window.goToPrevSlide = goToPrevSlide;
   window.goToSlide = goToSlide;
 }
+
+// Add a small utility CSS rule to the document head for transition blocking
+document.addEventListener('DOMContentLoaded', function() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .carousel-transition-active .carousel-card {
+      pointer-events: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+});
 
 // Make initialization function available globally
 window.initializeCarousel = initializeCarousel;
