@@ -136,9 +136,10 @@
   visibility: visible !important;
   display: block !important;
   user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE/Edge */
+  user-select: none; /* Standard property last */
   opacity: 1 !important;
   z-index: 1; /* Base z-index */
   transform-style: preserve-3d;
@@ -355,10 +356,10 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  user-select: none;
 }
 
 /* Activities list now at bottom of card */
@@ -371,10 +372,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  user-select: none;
 }
 
 .activities-list span {
@@ -432,10 +433,29 @@
   -webkit-user-select: none; /* Safari */
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* IE/Edge */
+  -ms-overflow-style: none;
+  scrollbar-width: none; /* Firefox */
+  scrollbar-color: transparent transparent; /* For Firefox */
+  overflow: auto;
 }
 
 .small-carousel:active {
   cursor: grabbing;
+}
+
+.small-carousel::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  display: none;
+}
+
+/* For Safari - hide scrollbar while keeping functionality */
+@supports (-webkit-overflow-scrolling: touch) {
+  .activities-list::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
 }
 
 .small-card {
@@ -581,6 +601,16 @@
   }
   
   /* Remove bouncy effects that could cause visual glitches */
+  .carousel-card, 
+  .carousel-card .card-content,
+  .carousel-card.current-card,
+  .carousel-card.prev-card,
+  .carousel-card.next-card {
+    -webkit-backface-visibility: hidden; /* Webkit prefix first */
+    backface-visibility: hidden; /* Standard property after */
+  }
+
+  /* Prevent flickering during transitions */
   .carousel-card, 
   .carousel-card .card-content,
   .carousel-card.current-card,

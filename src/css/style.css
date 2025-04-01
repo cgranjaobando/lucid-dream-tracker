@@ -94,6 +94,16 @@ main {
 .grid-view {
   width: 100%;
   flex: 1;
+  display: none; /* Default state - hidden */
+}
+
+/* Add class to control visibility through JavaScript */
+.grid-view.visible {
+  display: block;
+}
+
+.carousel-view.hidden {
+  display: none;
 }
 
 /* Calendar grid */

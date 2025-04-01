@@ -7,6 +7,26 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
   
+  // Handle Chrome extension connection error
+  window.addEventListener('error', function(event) {
+    // Suppress the "Receiving end does not exist" error from Chrome extensions
+    if (event && event.message && 
+        event.message.indexOf('Receiving end does not exist') !== -1) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+  });
+
+  // Alternatively, catch it directly with unhandledrejection
+  window.addEventListener('unhandledrejection', function(event) {
+    if (event && event.reason && 
+        event.reason.message && 
+        event.reason.message.indexOf('Could not establish connection') !== -1) {
+      event.preventDefault();
+      console.log('Suppressed Chrome extension connection error');
+    }
+  });
+  
   // DOM elements
   const toggleViewBtn = document.getElementById('toggleView');
   const carouselView = document.getElementById('carouselView');
@@ -66,27 +86,27 @@ document.addEventListener('DOMContentLoaded', function() {
   function toggleView() {
     if (currentView === 'carousel') {
       // Switch to grid view
-      carouselView.style.display = 'none';
-      gridView.style.display = 'block';
+      carouselView.classList.add('hidden');
+      gridView.classList.add('visible');
       toggleViewBtn.textContent = 'Cambiar a Vista de Carrusel';
       currentView = 'grid';
       
       // Ensure progress bar visibility in grid view
       const progressBar = document.querySelector('.progress-bar');
       if (progressBar) {
-        progressBar.style.display = 'block';
+        progressBar.classList.remove('hidden');
       }
     } else {
       // Switch to carousel view
-      gridView.style.display = 'none';
-      carouselView.style.display = 'block';
+      gridView.classList.remove('visible');
+      carouselView.classList.remove('hidden');
       toggleViewBtn.textContent = 'Cambiar a Vista de Calendario';
       currentView = 'carousel';
       
       // Ensure progress bar visibility in carousel view
       const progressBar = document.querySelector('.progress-bar');
       if (progressBar) {
-        progressBar.style.display = 'block';
+        progressBar.classList.remove('hidden');
       }
     }
     
@@ -168,7 +188,15 @@ document.addEventListener('DOMContentLoaded', function() {
   function restorePreferredView() {
     const preferredView = localStorage.getItem('preferredView');
     if (preferredView === 'grid' && currentView !== 'grid') {
-      toggleView(); // Switch to grid view
+      // Apply classes directly if grid is preferred
+      carouselView.classList.add('hidden');
+      gridView.classList.add('visible');
+      toggleViewBtn.textContent = 'Cambiar a Vista de Carrusel';
+      currentView = 'grid';
+    } else {
+      // Ensure carousel view is visible by default
+      gridView.classList.remove('visible');
+      carouselView.classList.remove('hidden');
     }
   }
 });

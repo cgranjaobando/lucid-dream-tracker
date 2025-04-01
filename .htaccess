@@ -1,0 +1,32 @@
+# Security headers
+<IfModule mod_headers.c>
+  # Add X-Content-Type-Options
+  Header set X-Content-Type-Options "nosniff"
+  
+  # Use Cache-Control instead of Expires
+  <FilesMatch "\.(html|htm|js|css|json)$">
+    Header set Cache-Control "max-age=86400, public"
+  </FilesMatch>
+  
+  <FilesMatch "\.(jpg|jpeg|png|gif|ico|webp|svg)$">
+    Header set Cache-Control "max-age=2592000, public"
+  </FilesMatch>
+  
+  # Remove unneeded Content-Security-Policy if it's being added
+  Header unset Content-Security-Policy
+  
+  # Ensure charset is properly set
+  AddCharset UTF-8 .html .css .js .json
+</IfModule>
+
+# Enable compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json
+</IfModule>
+
+# CORS settings if needed
+<IfModule mod_headers.c>
+  <FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|font.css|css|js)$">
+    Header set Access-Control-Allow-Origin "*"
+  </FilesMatch>
+</IfModule>
