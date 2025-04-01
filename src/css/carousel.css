@@ -81,13 +81,23 @@
   flex-direction: column;
 }
 
-/* Main carousel */
+/* Main carousel - add grab cursor to indicate draggable */
 .carousel {
   display: flex;
   position: relative;
   width: 100%;
   height: 100%;
   perspective: 1000px;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  cursor: grab; /* Show grab cursor to indicate draggable */
+  overflow: visible !important; /* Ensure cards outside the container are visible */
+}
+
+.carousel:active {
+  cursor: grabbing; /* Change cursor when actively dragging */
 }
 
 /* Common card styles - more vertical like Reels */
@@ -97,18 +107,78 @@
   max-width: 350px;
   height: 90%; /* Taller height */
   max-height: 580px;
-  transition: all 0.5s ease-in-out;
+  transition: all 0.3s ease-in-out;
   box-sizing: border-box;
   border-radius: 12px;
   overflow: hidden;
+  visibility: visible !important;
+  display: block !important;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  opacity: 1 !important;
+  z-index: 1; /* Base z-index */
+  transform-style: preserve-3d;
+  cursor: pointer !important; /* Force cursor to be pointer */
+  pointer-events: auto !important; /* Force pointer events to be enabled */
+}
+
+/* Asegurar que el contenido interior de las tarjetas no bloquea los clics */
+.carousel-card * {
+  pointer-events: none;
+}
+
+/* Add active state for touch devices */
+.carousel-card:active .card-content {
+  transform: none !important;
+}
+
+/* Make sure card content doesn't interfere with card clicks */
+.carousel-card .card-content {
+  pointer-events: none; /* Let clicks go to the card itself */
+}
+
+/* Make all content inside the card non-interactive */
+.carousel-card .card-content * {
+  pointer-events: none;
+}
+
+/* Current card needs higher z-index to be on top */
+.carousel-card.current-card {
+  z-index: 3 !important;
+  pointer-events: auto !important;
+  z-index: 10 !important; /* Asegurar que está en la capa superior */
+}
+
+/* Dragging state styles for cards */
+.carousel-card.dragging {
+  transition: none !important; /* Disable transitions during drag for real-time feedback */
+  will-change: transform; /* Optimize for animation performance */
+}
+
+.carousel-card.dragging .card-content {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4); /* Enhanced shadow during drag */
+}
+
+/* Touch dragging styles - similar to mouse dragging but optimized for touch */
+.carousel-card.touch-dragging {
+  transition: none !important; /* Disable transitions during touch for real-time feedback */
+  will-change: transform; /* Optimize for animation performance on mobile */
+}
+
+.carousel-card.touch-dragging .card-content {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4); /* Enhanced shadow during touch drag */
 }
 
 /* Previous card positioning - closer spacing for desktop */
 .carousel-card.prev-card {
   left: 10%; /* Moved from -5% to bring closer */
   transform: translateX(-25%) scale(0.85); /* Larger scale for closer appearance */
-  opacity: 0.8;
+  opacity: 0.8 !important;
   z-index: 1;
+  pointer-events: auto !important;
+  cursor: pointer !important; /* Make side cards clickable */
 }
 
 /* Current card positioning */
@@ -117,14 +187,43 @@
   transform: translateX(-50%) scale(1);
   z-index: 3;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  animation: cardPop 0.3s ease-out;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+@keyframes cardPop {
+  0% { transform: translateX(-50%) scale(0.9); }
+  50% { transform: translateX(-50%) scale(1.05); }
+  100% { transform: translateX(-50%) scale(1); }
 }
 
 /* Next card positioning - closer spacing for desktop */
 .carousel-card.next-card {
   right: 10%; /* Moved from -5% to bring closer */
   transform: translateX(25%) scale(0.85); /* Larger scale for closer appearance */
-  opacity: 0.8;
+  opacity: 0.8 !important;
   z-index: 1;
+  pointer-events: auto !important;
+  cursor: pointer !important; /* Make side cards clickable */
+}
+
+/* Add a hover effect to make it clear they're interactive */
+.carousel-card.prev-card:hover,
+.carousel-card.next-card:hover {
+  transform: translateX(-25%) scale(0.9) !important; /* Slightly larger on hover */
+  opacity: 0.9 !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.carousel-card.next-card:hover {
+  transform: translateX(25%) scale(0.9) !important;
+}
+
+/* Ensure content doesn't interfere with clicks */
+.carousel-card .card-content,
+.carousel-card .card-content * {
+  pointer-events: none !important;
 }
 
 /* Card content restructured for future image placement */
@@ -144,6 +243,25 @@
   overflow: hidden;
 }
 
+/* Card hover effects for better UX */
+.carousel-card .card-content:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Special effect for side cards to indicate they're clickable */
+.carousel-card.prev-card .card-content:hover,
+.carousel-card.next-card .card-content:hover {
+  transform: scale(1.05) translateY(-5px);
+  opacity: 0.9;
+}
+
+/* Current card hover effect */
+.carousel-card.current-card .card-content:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
 /* Future image area (top section) */
 .card-image-area {
   width: 100%;
@@ -152,6 +270,10 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 /* Activities list now at bottom of card */
@@ -164,6 +286,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .activities-list span {
@@ -176,6 +302,10 @@
   border-radius: 20px;
   min-width: 70%;
   text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 /* Carousel indicators (dots) */
@@ -213,6 +343,10 @@
   scroll-behavior: smooth;
   cursor: grab;
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  user-select: none; /* Disable text selection */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE/Edge */
 }
 
 .small-carousel:active {
@@ -231,6 +365,10 @@
   cursor: pointer;
   transition: all 0.3s ease;
   -webkit-tap-highlight-color: transparent;
+  user-select: none; /* Disable text selection */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .small-card.completed {
@@ -300,6 +438,8 @@
   .carousel-card {
     width: 75%;
     max-width: 320px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Elastic bounce effect */
+    -webkit-tap-highlight-color: transparent; /* Remove default tap highlight on Safari */
   }
   
   .carousel-card .card-content {
@@ -310,6 +450,34 @@
     width: 35px;
     height: 35px;
     font-size: 20px;
+  }
+  
+  /* Ensure side cards are properly clickable on mobile */
+  .carousel-card.prev-card,
+  .carousel-card.next-card {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    margin: 0 -5px; /* Increase clickable area for side cards too */
+  }
+  
+  /* More visible side cards on mobile */
+  .carousel-card.prev-card {
+    left: -8%;
+    transform: translateX(-20%) scale(0.75);
+    opacity: 0.7; /* Increased from 0.6 for better visibility */
+  }
+  
+  .carousel-card.next-card {
+    right: -8%;
+    transform: translateX(20%) scale(0.75);
+    opacity: 0.7; /* Increased from 0.6 for better visibility */
+  }
+  
+  /* More pronounced animation on mobile */
+  @keyframes cardPop {
+    0% { transform: translateX(-50%) scale(0.8); }
+    60% { transform: translateX(-50%) scale(1.08); }
+    100% { transform: translateX(-50%) scale(1); }
   }
   
   /* Return to wider spacing on mobile */
@@ -332,6 +500,21 @@
   .small-card {
     flex: 0 0 35px;
     height: 35px;
+  }
+  
+  /* Increase the area of cards that's clickable */
+  .carousel-card.current-card {
+    margin: 0 -10px; /* Negative margin to increase clickable area */
+  }
+  
+  /* Remove bouncy effects that could cause visual glitches */
+  .carousel-card, 
+  .carousel-card .card-content,
+  .carousel-card.current-card,
+  .carousel-card.prev-card,
+  .carousel-card.next-card {
+    backface-visibility: hidden; /* Prevent flickering during transitions */
+    -webkit-backface-visibility: hidden;
   }
 }
 
@@ -444,5 +627,62 @@
   .carousel-card h3 {
     font-size: 1rem;
     margin-bottom: 0.4rem;
+  }
+}
+
+/* Disable hover effects on mobile devices to prevent rebounding */
+@media (hover: none) {
+  .carousel-card .card-content:hover,
+  .carousel-card.prev-card .card-content:hover,
+  .carousel-card.next-card .card-content:hover,
+  .carousel-card.current-card .card-content:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  /* Modify the cardPop animation to be less bouncy on mobile */
+  @keyframes cardPop {
+    0% { transform: translateX(-50%) scale(0.95); }
+    100% { transform: translateX(-50%) scale(1); }
+  }
+}
+
+/* Update mobile transition to be faster and without bounce */
+@media (max-width: 768px) {
+  .carousel-card {
+    /* Replace cubic-bezier with linear or ease for less bounce */
+    transition: all 0.3s ease;
+  }
+  
+  /* Ensure click doesn't trigger transitions */
+  .carousel-card.touch-dragging {
+    animation: none !important;
+  }
+  
+  /* Stop any animation when user taps */
+  .carousel-card:active {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Disable the bouncing animation on mobile */
+  .carousel-card.current-card {
+    animation: none;
+  }
+}
+
+/* Ajustes para dispositivos de escritorio */
+@media (min-width: 769px) {
+  .carousel-card.current-card,
+  .carousel-card.prev-card,
+  .carousel-card.next-card {
+    pointer-events: auto !important;
+    cursor: pointer !important; 
+  }
+  
+  /* Añadir un efecto visual al hover para indicar que es clickable */
+  .carousel-card.current-card:hover {
+    transform: translateX(-50%) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   }
 }

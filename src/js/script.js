@@ -106,18 +106,41 @@ document.addEventListener('DOMContentLoaded', function() {
       console.warn('Grid view initialization function not available yet');
     }
     
-    // Initialize carousel view
-    if (typeof window.initializeCarousel === 'function') {
-      window.initializeCarousel();
-    } else {
-      console.warn('Carousel initialization function not available yet');
-      // Try again after a short delay
-      setTimeout(() => {
-        if (typeof window.initializeCarousel === 'function') {
+    // Improved carousel initialization with more robust error handling
+    function tryInitCarousel(attempts = 0) {
+      console.log(`Attempting carousel initialization, attempt ${attempts + 1}`);
+      
+      if (typeof window.initializeCarousel === 'function') {
+        try {
+          // Clear existing content first in case of partial initialization
+          const carousel = document.querySelector('.carousel');
+          if (carousel) carousel.innerHTML = '';
+          
           window.initializeCarousel();
+          
+          // Verify initialization worked
+          setTimeout(() => {
+            const cards = document.querySelectorAll('.carousel-card');
+            if (cards.length === 0 && attempts < 5) {
+              console.warn('Carousel initialization did not create any cards, retrying...');
+              tryInitCarousel(attempts + 1);
+            } else if (cards.length > 0) {
+              console.log(`Carousel successfully initialized with ${cards.length} cards`);
+            }
+          }, 200);
+        } catch (error) {
+          console.error('Error during carousel initialization:', error);
+          if (attempts < 5) setTimeout(() => tryInitCarousel(attempts + 1), 300);
         }
-      }, 200);
+      } else if (attempts < 5) {
+        console.warn('Carousel initialization function not available yet, retrying...');
+        setTimeout(() => tryInitCarousel(attempts + 1), 300);
+      } else {
+        console.error('Failed to initialize carousel after multiple attempts');
+      }
     }
+    
+    tryInitCarousel();
     
     // Update overall progress
     if (typeof window.updateOverallProgress === 'function') {
@@ -150,14 +173,51 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// Add event listener to track all clicks for debugging
+window.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('click', function(e) {
+    // Log all clicks to see if they're properly propagating
+    const target = e.target;
+    
+    if (target.closest('.carousel-card')) {
+      const card = target.closest('.carousel-card');
+      const isProcessed = e.cardClickProcessed || false;
+      
+      console.log(`Click on carousel card detected:`, {
+        day: card.dataset.day,
+        class: Array.from(card.classList).join(' '),
+        processed: isProcessed,
+        target: target.tagName,
+        clickPath: e.composedPath().map(el => el.tagName || el.toString()).join(' > ')
+      });
+    }
+  }, true); // Use capture phase
+});
+
 // Function to show the day popup when a day card is clicked (either in grid or carousel)
 window.showDayPopup = function(dayCard) {
+  // Store reference to selected card for later
   window.selectedDayCard = dayCard;
+  
+  // Get popup elements
   const popup = document.getElementById('popup');
   const title = document.getElementById('popupTitle');
   const desc = document.getElementById('popupDesc');
-  const activityKeys = JSON.parse(dayCard.dataset.activities);
   
+  // Ensure we have valid activity data
+  let activityKeys;
+  try {
+    activityKeys = JSON.parse(dayCard.dataset.activities);
+    if (!Array.isArray(activityKeys)) {
+      console.error('Invalid activity data format');
+      return;
+    }
+  } catch (error) {
+    console.error('Error parsing activity data:', error);
+    return;
+  }
+  
+  // Build popup content
   title.innerHTML = `Día ${dayCard.dataset.day}`;
   desc.innerHTML = activityKeys
     .map((key, index) => `
@@ -180,10 +240,19 @@ window.showDayPopup = function(dayCard) {
     checkbox.checked = savedStates[index] || false;
   });
   
+  // Update progress if function exists
   if (typeof window.updateTaskProgress === 'function') {
     window.updateTaskProgress();
   }
+  
+  // Show popup
   popup.classList.add('active');
+  
+  // Debug info
+  console.log(`Showing popup for day ${day}`);
+  console.log(`Popup shown for day ${day} from ${dayCard.classList.contains('current-card') ? 'current' : 
+    dayCard.classList.contains('prev-card') ? 'prev' : 
+    dayCard.classList.contains('next-card') ? 'next' : 'unknown'} card`);
 };
 
 // Ensure navigateToSlide is globally accessible 
@@ -199,4 +268,29 @@ window.navigateToSlide = function(slideIndex) {
       }
     }, 100);
   }
+};
+
+// Add a global helper to diagnose card issues
+window.debugCarousel = function() {
+  console.group('Carousel Debug');
+  
+  const carousel = document.querySelector('.carousel');
+  const cards = document.querySelectorAll('.carousel-card');
+  
+  console.log(`Carousel found: ${!!carousel}`);
+  console.log(`Card count: ${cards.length}`);
+  
+  cards.forEach(card => {
+    const classList = Array.from(card.classList);
+    const day = card.dataset.day;
+    const computed = window.getComputedStyle(card);
+    
+    console.log(`Card ${day}: ${classList.join(' ')}`);
+    console.log(`  - Position: left=${computed.left}, right=${computed.right}, z-index=${computed.zIndex}`);
+    console.log(`  - Visibility: opacity=${computed.opacity}, display=${computed.display}, visibility=${computed.visibility}`);
+    console.log(`  - Transforms: ${computed.transform}`);
+    console.log(`  - Pointer events: ${computed.pointerEvents}`);
+  });
+  
+  console.groupEnd();
 };

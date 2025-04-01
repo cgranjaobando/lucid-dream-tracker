@@ -26,6 +26,18 @@ body {
   position: relative;
 }
 
+/* Prevent text selection on elements that are meant to be interacted with */
+.carousel-nav, 
+.indicator,
+.day,
+button,
+.small-card span {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
 /* Header styling */
 header {
   width: 100%;
@@ -101,11 +113,14 @@ main {
   transition: all 0.2s ease;
   text-align: center;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  position: relative; /* Ensure proper stacking context */
+  z-index: 1; /* Ensure clicks register */
 }
 
 .day:hover {
   transform: scale(1.03);
   background-color: #3a4a5e;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 .day.completed {
@@ -115,11 +130,13 @@ main {
 .day strong {
   display: block;
   margin-bottom: 5px;
+  pointer-events: none; /* Prevent text selection interfering with clicks */
 }
 
 .day small {
   font-size: 0.8rem;
   color: #bdc3c7;
+  pointer-events: none; /* Prevent text selection interfering with clicks */
 }
 
 /* Progress bar */
@@ -158,6 +175,17 @@ main {
 .advice p {
   margin: 8px 0;
   font-size: 0.9rem;
+}
+
+/* Highlighted advice */
+.advice .tip {
+  margin-top: 15px;
+  font-style: italic;
+}
+
+.advice .highlight {
+  color: #3498db;
+  font-weight: bold;
 }
 
 /* Add Instagram-like gradients for the carousel cards */

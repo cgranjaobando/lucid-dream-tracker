@@ -8,7 +8,10 @@
 // Function to initialize the grid view
 function initializeGridView() {
   const calendar = document.getElementById('calendar');
-  if (!calendar) return;
+  if (!calendar) {
+    console.error('Calendar element not found');
+    return;
+  }
   
   // Clear existing content
   calendar.innerHTML = '';
@@ -30,15 +33,31 @@ function initializeGridView() {
       }
       
       dayBox.innerHTML = `<strong>Día ${i + 1}</strong><br><small>${activities.join(', ')}</small>`;
-      dayBox.addEventListener('click', () => window.showDayPopup(dayBox));
+      
+      // Add a more robust click handler
+      dayBox.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log(`Grid day ${i+1} clicked`);
+        if (window.showDayPopup) {
+          window.showDayPopup(this);
+        } else {
+          console.error('showDayPopup function not available');
+        }
+      });
+      
       calendar.appendChild(dayBox);
     });
+  } else {
+    console.error('Plan data not defined');
   }
   
   // Update progress
   if (typeof window.updateOverallProgress === 'function') {
     window.updateOverallProgress();
   }
+  
+  console.log('Grid view initialized with', plan ? plan.length : 0, 'days');
 }
 
 // Make function available globally
