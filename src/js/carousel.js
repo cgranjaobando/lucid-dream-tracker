@@ -97,11 +97,9 @@ function initializeCarousel() {
     // Limpiar clases y estilos transitorios de todas las tarjetas
     const clearAllTransitions = () => {
       document.querySelectorAll('.carousel-card').forEach(card => {
-        card.classList.remove('entering-left', 'entering-right', 'moving-left', 'moving-right', 'clicked');
-        // Eliminar cualquier estilo inline que pueda interferir
-        card.style.transition = '';
-        card.style.opacity = '';
-        card.style.transform = '';
+        card.classList.remove('entering-left', 'entering-right', 'moving-left', 'moving-right', 'clicked', 'pre-moving');
+        // Limpiar absolutamente todos los estilos inline
+        card.style = "";
         card.style.pointerEvents = 'auto';
       });
       
@@ -110,7 +108,7 @@ function initializeCarousel() {
     };
     
     // Limpia las transiciones después de completar la animación
-    setTimeout(clearAllTransitions, 500);
+    setTimeout(clearAllTransitions, 350);
   };
   
   // Create a single carousel card
@@ -184,10 +182,10 @@ function initializeCarousel() {
             // Añadir clase de clic para mejor animación
             newCard.classList.add('clicked');
             
-            // Pequeño retraso para permitir que la animación "clicked" sea visible
+            // Aumentar el retraso para igualar con las flechas del carrusel
             setTimeout(() => {
               goToSlide(dayIndex);
-            }, 150);
+            }, 350); // Aumentado de 250ms a 350ms para igualar con las flechas
           } else if (isCurrent) {
             console.log(`Mostrando popup para día ${day}`);
             if (window.showDayPopup) {
@@ -218,10 +216,10 @@ function initializeCarousel() {
                 // Añadir clase de clic para mejor feedback visual
                 newCard.classList.add('clicked');
                 
-                // Pequeño retraso para permitir que la animación "clicked" sea visible
+                // Aumentar el retraso para igualar con las flechas del carrusel
                 setTimeout(() => {
                   goToSlide(dayIndex);
-                }, 150);
+                }, 350); // Aumentado de 250ms a 350ms para igualar con las flechas
               } else if (isCurrent) {
                 console.log(`Mostrando popup para día ${day}`);
                 if (window.showDayPopup) {
@@ -287,23 +285,34 @@ function initializeCarousel() {
     }
     document.body.classList.add('carousel-transition-active');
     
-    // Save original positions to prevent jumping
-    if (currentCard) {
-      currentCard.classList.add('moving-left');
-      currentCard.style.pointerEvents = 'none';
-    }
-    
+    // Primero manipular la tarjeta next porque será la principal
     if (nextCard) {
-      nextCard.classList.add('moving-left');
-      nextCard.style.pointerEvents = 'none';
+      nextCard.style.zIndex = '20'; // Mayor prioridad para la que será la nueva tarjeta central
     }
     
-    if (prevCard) {
-      // Asegurar que el fade sea consistente
-      prevCard.classList.add('moving-left');
-      prevCard.style.opacity = '0';
-      prevCard.style.pointerEvents = 'none';
+    // INMEDIATAMENTE reducir el z-index de la tarjeta current
+    if (currentCard) {
+      currentCard.style.zIndex = '1'; // Valor aún más bajo para garantizar que quede debajo
     }
+    
+    // Pequeño retraso antes de iniciar las animaciones
+    setTimeout(() => {
+      if (nextCard) {
+        nextCard.classList.add('moving-left');
+        nextCard.style.pointerEvents = 'none';
+      }
+      
+      if (currentCard) {
+        currentCard.classList.add('moving-left');
+        currentCard.style.pointerEvents = 'none';
+      }
+      
+      if (prevCard) {
+        prevCard.classList.add('moving-left');
+        prevCard.style.opacity = '0';
+        prevCard.style.pointerEvents = 'none';
+      }
+    }, 5); // Un retraso mínimo de 5ms
     
     // Tiempo exacto para ambas direcciones
     setTimeout(() => {
@@ -314,7 +323,7 @@ function initializeCarousel() {
       setTimeout(() => {
         document.body.classList.remove('carousel-transition-active');
       }, 100);
-    }, 400);
+    }, 350);
   };
   
   // Function to go to previous slide with enhanced animation
@@ -330,23 +339,34 @@ function initializeCarousel() {
     }
     document.body.classList.add('carousel-transition-active');
     
-    // Save original positions to prevent jumping - balance with forward animation
-    if (currentCard) {
-      currentCard.classList.add('moving-right');
-      currentCard.style.pointerEvents = 'none';
-    }
-    
+    // Primero manipular la tarjeta prev porque será la principal
     if (prevCard) {
-      prevCard.classList.add('moving-right');
-      prevCard.style.pointerEvents = 'none';
+      prevCard.style.zIndex = '20'; // Mayor prioridad para la que será la nueva tarjeta central
     }
     
-    if (nextCard) {
-      // Asegurar que el fade sea idéntico al del prevCard en goToNextSlide
-      nextCard.classList.add('moving-right');
-      nextCard.style.opacity = '0';
-      nextCard.style.pointerEvents = 'none';
+    // INMEDIATAMENTE reducir el z-index de la tarjeta current
+    if (currentCard) {
+      currentCard.style.zIndex = '1'; // Valor aún más bajo para garantizar que quede debajo
     }
+    
+    // Pequeño retraso antes de iniciar las animaciones
+    setTimeout(() => {
+      if (prevCard) {
+        prevCard.classList.add('moving-right');
+        prevCard.style.pointerEvents = 'none';
+      }
+      
+      if (currentCard) {
+        currentCard.classList.add('moving-right');
+        currentCard.style.pointerEvents = 'none';
+      }
+      
+      if (nextCard) {
+        nextCard.classList.add('moving-right');
+        nextCard.style.opacity = '0';
+        nextCard.style.pointerEvents = 'none';
+      }
+    }, 5); // Un retraso mínimo de 5ms
     
     // Usar el mismo tiempo que en goToNextSlide
     setTimeout(() => {
@@ -357,7 +377,7 @@ function initializeCarousel() {
       setTimeout(() => {
         document.body.classList.remove('carousel-transition-active');
       }, 100);
-    }, 400);
+    }, 350);
   };
   
   // Function to go to a specific slide with smoother transition

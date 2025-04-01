@@ -2,13 +2,22 @@
 
 /* Variables CSS para mantener la consistencia */
 :root {
-  --card-transition-duration: 0.45s;
-  --card-transition-timing: cubic-bezier(0.22, 0.1, 0.2, 1);
+  --card-transition-duration: 0.35s;  /* Antes: 0.45s */
+  --card-transition-timing: cubic-bezier(0.25, 0.8, 0.5, 1);  /* Antes: cubic-bezier(0.22, 0.1, 0.2, 1) */
   --card-scale-current: 1;
   --card-scale-side: 0.85;
   --card-scale-side-hover: 0.9;
   --card-opacity-side: 0.8;
   --card-side-offset: 15%;
+  --card-pre-moving-z: 8; /* Nuevo: z-index durante la fase de preparación del movimiento */
+  
+  /* Nuevas variables para tarjetas laterales con clic */
+  --card-click-duration: 0.5s; /* Más lento para los clics en tarjetas laterales */
+  --card-click-timing: cubic-bezier(0.22, 0.61, 0.36, 1); /* Curva más suave */
+  --card-side-z-index: 5;
+  --card-current-z-index: 10;
+  --card-moving-z-index: 15;
+  --card-current-z-index-moving: 20; /* Nuevo: z-index más alto para la tarjeta actual durante la transición */
 }
 
 /* Carousel container */
@@ -140,20 +149,36 @@
 /* Transition state classes for animation effects - mejoradas para simetría */
 .carousel-card.moving-left,
 .carousel-card.moving-right {
-  transition: transform var(--card-transition-duration) var(--card-transition-timing), opacity var(--card-transition-duration) ease;
+  transition: transform var(--card-transition-duration) var(--card-transition-timing), opacity var(--card-transition-duration) ease-out;
 }
 
 /* Smooth transitions when moving cards - balanced for both directions */
 .carousel-card.moving-left.current-card {
   transform: translateX(-100%) scale(var(--card-scale-side));
   opacity: var(--card-opacity-side);
+  z-index: var(--card-current-z-index-moving) !important; /* Valor más alto que cualquier otra tarjeta */
 }
 
 .carousel-card.moving-right.current-card {
   transform: translateX(0%) scale(var(--card-scale-side));
   opacity: var(--card-opacity-side);
+  z-index: var(--card-current-z-index-moving) !important; /* Valor más alto que cualquier otra tarjeta */
 }
 
+/* Tarjetas que se están moviendo hacia el centro - asegurar que estén encima */
+.carousel-card.moving-left.next-card {
+  transform: translateX(-50%) scale(var(--card-scale-current));
+  opacity: 1;
+  z-index: var(--card-side-z-index) !important; /* Más bajo que la current-card en transición */
+}
+
+.carousel-card.moving-right.prev-card {
+  transform: translateX(-50%) scale(var(--card-scale-current));
+  opacity: 1;
+  z-index: var(--card-side-z-index) !important; /* Más bajo que la current-card en transición */
+}
+
+/* Smooth transitions when moving cards - balanced for both directions */
 .carousel-card.moving-left.next-card {
   transform: translateX(-50%) scale(var(--card-scale-current));
   opacity: 1;
@@ -174,6 +199,25 @@
 .carousel-card.moving-right.next-card {
   opacity: 0.5;
   transform: translateX(85%) scale(0.7);
+}
+
+/* Mejorar el efecto de superposición durante el inicio del movimiento */
+.carousel-card.next-card.pre-moving,
+.carousel-card.prev-card.pre-moving {
+  z-index: var(--card-pre-moving-z) !important;
+  transition: none !important; /* Desactivar transición durante la preparación */
+  will-change: transform, opacity, z-index;
+}
+
+/* Mejora de z-index para las tarjetas en movimiento */
+.carousel-card.moving-left.next-card,
+.carousel-card.moving-right.prev-card {
+  z-index: var(--card-moving-z-index) !important;
+}
+
+.carousel-card.moving-left.current-card,
+.carousel-card.moving-right.current-card {
+  z-index: var(--card-side-z-index) !important;
 }
 
 /* Mejorar las animaciones de entrada para mayor simetría */
@@ -775,19 +819,39 @@
   .carousel-card.current-card {
     transition: all var(--card-transition-duration) var(--card-transition-timing);
   }
+  
+  /* Asegurar que cada tarjeta tenga su z-index adecuado */
+  .carousel-card.current-card {
+    z-index: var(--card-current-z-index);
+  }
+  
+  .carousel-card.prev-card,
+  .carousel-card.next-card {
+    z-index: var(--card-side-z-index);
+  }
+  
+  /* Mejorar el efecto de superposición durante transiciones */
+  .carousel-card.moving-left.next-card,
+  .carousel-card.moving-right.prev-card {
+    transition: transform var(--card-transition-duration) var(--card-transition-timing),
+                opacity var(--card-transition-duration) var(--card-transition-timing),
+                z-index 0s !important;
+  }
 }
 
 /* Transición optimizada para clic en tarjeta lateral */
 .carousel-card.clicked {
-  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  transition: transform var(--card-click-duration) var(--card-click-timing), 
+              opacity var(--card-click-duration) var(--card-click-timing) !important;
+  z-index: var(--card-moving-z-index) !important; /* Asegurar que esté por encima durante el clic */
 }
 
 .carousel-card.prev-card.clicked {
-  transform: translateX(-45%) scale(0.9);
-  opacity: 0.9;
+  transform: translateX(-45%) scale(0.92);
+  opacity: 0.95;
 }
 
 .carousel-card.next-card.clicked {
-  transform: translateX(45%) scale(0.9);
-  opacity: 0.9;
+  transform: translateX(45%) scale(0.92);
+  opacity: 0.95;
 }
