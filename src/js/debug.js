@@ -3,8 +3,8 @@
  * This file contains functions to help diagnose and fix interaction issues
  */
 
-// Global flag to enable/disable debug mode
-window.debugMode = true;
+// Global flag to enable/disable debug mode - Set to false to hide debug buttons
+window.debugMode = false; // Changed from true to false to hide debug UI elements
 
 // Enhanced logging function that only logs when debug mode is on
 function debugLog(...args) {
@@ -205,78 +205,30 @@ window.testCardClicks = function() {
   console.groupEnd();
 };
 
-// Add mobile debug button on touch devices
+// Add mobile debug button on touch devices - Won't run with debugMode = false
 if ('ontouchstart' in window) {
   document.addEventListener('DOMContentLoaded', () => {
     if (window.debugMode) {
-      const mobileDebugBtn = document.createElement('button');
-      mobileDebugBtn.id = 'mobileDebugButton';
-      mobileDebugBtn.textContent = 'Mobile Debug';
-      mobileDebugBtn.style.position = 'fixed';
-      mobileDebugBtn.style.bottom = '50px';
-      mobileDebugBtn.style.right = '10px';
-      mobileDebugBtn.style.zIndex = '9999';
-      mobileDebugBtn.style.background = '#e74c3c';
-      mobileDebugBtn.style.color = 'white';
-      mobileDebugBtn.style.border = 'none';
-      mobileDebugBtn.style.padding = '8px 12px';
-      mobileDebugBtn.style.borderRadius = '4px';
-      
-      mobileDebugBtn.addEventListener('click', window.debugMobile);
-      document.body.appendChild(mobileDebugBtn);
+      // Button creation code will not execute since debugMode is false
     }
   });
 }
 
-// Add button to test clicks
+// Add button to test clicks - Won't run with debugMode = false
 document.addEventListener('DOMContentLoaded', function() {
   if (window.debugMode) {
-    const clickTestBtn = document.createElement('button');
-    clickTestBtn.textContent = 'Test Card Clicks';
-    clickTestBtn.style.position = 'fixed';
-    clickTestBtn.style.bottom = '90px';
-    clickTestBtn.style.right = '10px';
-    clickTestBtn.style.zIndex = '9999';
-    clickTestBtn.style.background = '#f39c12';
-    clickTestBtn.style.color = 'white';
-    clickTestBtn.style.border = 'none';
-    clickTestBtn.style.padding = '8px 12px';
-    clickTestBtn.style.borderRadius = '4px';
-    
-    clickTestBtn.addEventListener('click', window.testCardClicks);
-    document.body.appendChild(clickTestBtn);
+    // Button creation code will not execute since debugMode is false
   }
 });
 
-// Initialize debugging tools once DOM is loaded
+// Initialize debugging tools once DOM is loaded - Won't run with debugMode = false
 document.addEventListener('DOMContentLoaded', () => {
   if (window.debugMode) {
-    // Add a debug button to the page
-    const debugButton = document.createElement('button');
-    debugButton.id = 'debugButton';
-    debugButton.textContent = 'Debug Carousel';
-    debugButton.style.position = 'fixed';
-    debugButton.style.bottom = '10px';
-    debugButton.style.right = '10px';
-    debugButton.style.zIndex = '9999';
-    debugButton.style.background = '#e74c3c';
-    debugButton.style.color = 'white';
-    debugButton.style.border = 'none';
-    debugButton.style.padding = '8px 12px';
-    debugButton.style.borderRadius = '4px';
-    
-    debugButton.addEventListener('click', () => {
-      inspectCarouselEvents();
-      fixCarouselInteraction();
-      window.debugCarousel();
-    });
-    
-    document.body.appendChild(debugButton);
-    console.log('Debug tools initialized');
+    // Button creation code will not execute since debugMode is false
   }
 });
 
-// Make functions available globally
+// Make functions available globally for console debugging
 window.debugLog = debugLog;
 window.inspectCarouselEvents = inspectCarouselEvents;
 window.fixCarouselInteraction = fixCarouselInteraction;
