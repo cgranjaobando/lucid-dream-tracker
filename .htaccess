@@ -3,20 +3,24 @@
   # Add X-Content-Type-Options
   Header set X-Content-Type-Options "nosniff"
   
-  # Use Cache-Control instead of Expires
-  <FilesMatch "\.(html|htm|js|css|json)$">
+  # Improved Cache-Control settings (no Expires)
+  # JS and CSS files - long cache with immutable
+  <FilesMatch "\.(js|css)$">
+    Header unset Expires
+    Header set Cache-Control "max-age=31536000, public, immutable"
+  </FilesMatch>
+  
+  # HTML files - shorter cache without immutable
+  <FilesMatch "\.(html|htm|json)$">
+    Header unset Expires
     Header set Cache-Control "max-age=86400, public"
   </FilesMatch>
   
+  # Media files - very long cache with immutable
   <FilesMatch "\.(jpg|jpeg|png|gif|ico|webp|svg)$">
-    Header set Cache-Control "max-age=2592000, public"
+    Header unset Expires
+    Header set Cache-Control "max-age=31536000, public, immutable"
   </FilesMatch>
-  
-  # Remove unneeded Content-Security-Policy if it's being added
-  Header unset Content-Security-Policy
-  
-  # Ensure charset is properly set
-  AddCharset UTF-8 .html .css .js .json
 </IfModule>
 
 # Enable compression
@@ -24,9 +28,6 @@
   AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json
 </IfModule>
 
-# CORS settings if needed
-<IfModule mod_headers.c>
-  <FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|font.css|css|js)$">
-    Header set Access-Control-Allow-Origin "*"
-  </FilesMatch>
-</IfModule>
+# Set UTF-8 charset
+AddDefaultCharset UTF-8
+AddCharset UTF-8 .html .css .js .json

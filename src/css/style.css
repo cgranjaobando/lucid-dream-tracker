@@ -1,4 +1,4 @@
-/* filepath: c:\Users\cgran\PycharmProjects\Oliveruras\LucidDreamsApp\lucid-dream-tracker\src\css\style.css */
+/* filepath: c:\Users\cgran\PycharmProjects\Oliveruras\LucidDreamsApp\LucidDreamsApp\v2\src\css\style.css */
 /* Main styles for Lucid Dreams App */
 
 /* Reset and base setup */
@@ -32,10 +32,10 @@ body {
 .day,
 button,
 .small-card span {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
+  -webkit-user-select: none; /* Webkit first */
+  -moz-user-select: none; 
   -ms-user-select: none;
+  user-select: none; /* Standard last */
 }
 
 /* Header styling */

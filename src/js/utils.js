@@ -320,6 +320,39 @@ function updateOverallProgress() {
   }
 }
 
+// Function to show the day popup when a day card is clicked (either in grid or carousel)
+window.showDayPopup = function(dayCard) {
+  const popup = document.getElementById("popup");
+  const title = document.getElementById("popupTitle");
+  const desc = document.getElementById("popupDescription");
+  
+  window.selectedDayCard = dayCard;
+  const day = dayCard.dataset.day;
+  const activityKeys = plan[day - 1];
+  
+  // Build popup content - ADD id AND name ATTRIBUTES TO CHECKBOXES
+  title.innerHTML = `Día ${dayCard.dataset.day}`;
+  desc.innerHTML = activityKeys
+    .map((key, index) => `
+      <div style="margin-bottom: 0.5rem;">
+        <div style="display: flex; align-items: center;">
+          <input type="checkbox" 
+                 class="task-checkbox" 
+                 id="task-${key}-${index}" 
+                 name="task-${key}-${index}" 
+                 data-task="${key}" 
+                 onchange="window.updateTaskProgress()">
+          <strong class="activity-name" onclick="window.openActivityPopup('${key}')">${key}</strong>
+        </div>
+        <small>${activities[key]}</small>
+        <span class="instruction-toggle" onclick="window.toggleInstructionDetail('${key}', ${index})">Ver más</span>
+        <div id="instructionDetail_${key}_${index}" class="instruction-detail" style="display: none;"></div>
+      </div>
+    `).join('');
+  
+  popup.classList.add("active");
+};
+
 // Expose functions to global scope for HTML event handlers
 window.toggleInstructionDetail = toggleInstructionDetail;
 window.openActivityPopup = openActivityPopup;
@@ -327,3 +360,4 @@ window.closeActivityPopup = closeActivityPopup;
 window.closePopup = closePopup;
 window.updateTaskProgress = updateTaskProgress;
 window.updateOverallProgress = updateOverallProgress;
+window.showDayPopup = window.showDayPopup;

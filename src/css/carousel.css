@@ -108,10 +108,10 @@
   width: 100%;
   height: 100%;
   perspective: 1000px;
-  user-select: none;
-  -webkit-user-select: none;
+  -webkit-user-select: none; /* Correct order - WebKit first */
   -moz-user-select: none;
   -ms-user-select: none;
+  user-select: none; /* Standard property last */
   cursor: grab; /* Show grab cursor to indicate draggable */
   overflow: visible !important; /* Ensure cards outside the container are visible */
 }
@@ -388,10 +388,10 @@
   border-radius: 20px;
   min-width: 70%;
   text-align: center;
-  user-select: none;
-  -webkit-user-select: none;
+  -webkit-user-select: none; /* Correct order */
   -moz-user-select: none;
   -ms-user-select: none;
+  user-select: none;
 }
 
 /* Carousel indicators (dots) */
@@ -423,39 +423,32 @@
 /* Small carousel (thumbnails) */
 .small-carousel {
   display: flex;
-  overflow-x: auto;
   padding: 5px 0;
   margin: 0 0 15px 0;
   scroll-behavior: smooth;
   cursor: grab;
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-  user-select: none; /* Disable text selection */
+  
+  /* User select properties - vendor prefixes first */
   -webkit-user-select: none; /* Safari */
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* IE/Edge */
-  -ms-overflow-style: none;
-  scrollbar-width: none; /* Firefox */
-  scrollbar-color: transparent transparent; /* For Firefox */
-  overflow: auto;
+  user-select: none; /* Standard last */
+  
+  /* Scrollbar hiding properties - vendor prefixes first */
+  -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
+  -ms-overflow-style: none; /* IE and Edge */
+  overflow: -moz-scrollbars-none; /* Firefox older versions */
+  scrollbar-width: none; /* Firefox newer versions */
+  overflow-x: auto; /* Standard property last */
+  overflow: auto; /* Standard property last - this will override overflow-x */
 }
 
-.small-carousel:active {
-  cursor: grabbing;
-}
-
+/* This is the WebKit (Safari, Chrome) specific way to hide scrollbars */
 .small-carousel::-webkit-scrollbar {
   width: 0;
   height: 0;
-  background-color: transparent;
   display: none;
-}
-
-/* For Safari - hide scrollbar while keeping functionality */
-@supports (-webkit-overflow-scrolling: touch) {
-  .activities-list::-webkit-scrollbar {
-    width: 0px;
-    background: transparent;
-  }
+  background: transparent;
 }
 
 .small-card {
@@ -470,10 +463,10 @@
   cursor: pointer;
   transition: all 0.3s ease;
   -webkit-tap-highlight-color: transparent;
-  user-select: none; /* Disable text selection */
-  -webkit-user-select: none;
+  -webkit-user-select: none; /* Correct order */
   -moz-user-select: none;
   -ms-user-select: none;
+  user-select: none;
 }
 
 .small-card.completed {
@@ -606,21 +599,11 @@
   .carousel-card.current-card,
   .carousel-card.prev-card,
   .carousel-card.next-card {
-    -webkit-backface-visibility: hidden; /* Webkit prefix first */
-    backface-visibility: hidden; /* Standard property after */
+    -webkit-backface-visibility: hidden; /* Webkit prefix MUST come first */
+    backface-visibility: hidden; /* Standard property MUST come last */
   }
 
   /* Prevent flickering during transitions */
-  .carousel-card, 
-  .carousel-card .card-content,
-  .carousel-card.current-card,
-  .carousel-card.prev-card,
-  .carousel-card.next-card {
-    backface-visibility: hidden; /* Prevent flickering during transitions */
-    -webkit-backface-visibility: hidden;
-  }
-
-  /* Improve mobile touch feedback */
   .carousel-card.touch-dragging {
     transition: transform 0.05s linear !important;
     will-change: transform, opacity;
