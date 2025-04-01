@@ -113,4 +113,4 @@ Contributions are welcome! Please feel free to submit a pull request or open an 
 
 This project is licensed under the MIT License - see LICENSE file for details.
 
-Created by Carlos Granados (Oliveruras)
+Created by Carlos Granja (Powertrics)
